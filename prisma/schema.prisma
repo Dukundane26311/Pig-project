@@ -1,0 +1,442 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  PROJECT_MANAGER
+  FINANCE_OFFICER
+  FIELD_OFFICER
+  VETERINARIAN
+  TRAINER
+  FUNDER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  phone         String?   @unique
+  phoneVerified DateTime?
+  password      String
+  role          Role      @default(FIELD_OFFICER)
+  active        Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  tasksAssigned Task[]
+  fieldVisits   FieldVisit[]
+  vetVisits     VeterinaryVisit[]
+  vetRecords    VeterinaryRecord[]
+  transactions  FinanceTransaction[] @relation("CreatedBy")
+  approvedTrans FinanceTransaction[] @relation("ApprovedBy")
+  auditLogs     AuditLog[]
+  otps          OTP[]
+  notifications Notification[]
+}
+
+enum BeneficiaryStatus {
+  AWAITING_PIGLET
+  PIGLET_RECEIVED
+  GROWING
+  PREGNANT
+  LITTER_BORN
+  PIGLETS_GROWING
+  REPAYMENT_DUE
+  PARTIALLY_REPAID
+  REPAID_3_PIGLETS
+  COMPLETED
+  SUSPENDED
+  WITHDRAWN
+}
+
+model Beneficiary {
+  id             String    @id @default(cuid())
+  beneficiaryId  String    @unique // Code
+  fullName       String
+  district       String
+  sector         String
+  cell           String
+  village        String?
+  savingsGroup   String?
+  phone          String?
+  alternativePhone String?
+  dateJoined     DateTime
+  status         BeneficiaryStatus @default(AWAITING_PIGLET)
+  fieldOfficerId String?
+  latitude       Float?
+  longitude      Float?
+  testimony      String?
+  notes          String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  pigs           Pig[]     @relation("BeneficiaryPigs")
+  returnedPiglets Piglet[] @relation("ReturnedFromBeneficiary")
+  
+  repayments     Repayment[]
+  redistributionsFrom Redistribution[] @relation("RedistributionFrom")
+  redistributionsTo   Redistribution[] @relation("RedistributionTo")
+  
+  fieldVisits    FieldVisit[]
+  tasks          Task[]
+  transactions   FinanceTransaction[]
+  documents      Document[]
+}
+
+enum PigStatus {
+  REGISTERED
+  PURCHASED
+  DISTRIBUTED
+  GROWING
+  PREGNANT
+  DELIVERED
+  PIGLETS_RECORDED
+  PIGLETS_GROWING
+  REPAYMENT
+  RETURNED_PIGLETS
+  REDISTRIBUTED
+  DECEASED
+  SOLD
+}
+
+model Pig {
+  id             String    @id @default(cuid())
+  pigId          String    @unique // Code
+  beneficiaryId  String?
+  beneficiary    Beneficiary? @relation("BeneficiaryPigs", fields: [beneficiaryId], references: [id])
+  breed          String?
+  sex            String? // MALE/FEMALE
+  color          String?
+  dateOfBirth    DateTime?
+  dateReceived   DateTime?
+  source         String?
+  purchasePrice  Decimal?  @db.Decimal(10, 2)
+  status         PigStatus @default(REGISTERED)
+  currentLocation String?
+  healthStatus   String?
+  pregnancyStatus String?
+  expectedDelivery DateTime?
+  dateOfDelivery DateTime?
+  notes          String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  litters        Litter[]
+  vetVisits      VeterinaryVisit[]
+  vetRecords     VeterinaryRecord[]
+  fieldVisits    FieldVisit[]
+  tasks          Task[]
+  transactions   FinanceTransaction[]
+  repayments     Repayment[]
+  documents      Document[]
+}
+
+model Litter {
+  id             String    @id @default(cuid())
+  pigId          String
+  pig            Pig       @relation(fields: [pigId], references: [id])
+  dateOfBirth    DateTime
+  numberOfPigletsBorn Int
+  numberSurvived  Int
+  numberLost      Int
+  notes          String?
+  
+  piglets        Piglet[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum PigletStatus {
+  WITH_MOTHER
+  GROWING
+  AVAILABLE_FOR_REDISTRIBUTION
+  REDISTRIBUTED
+  DECEASED
+}
+
+model Piglet {
+  id             String    @id @default(cuid())
+  pigletId       String    @unique // Code
+  litterId       String
+  litter         Litter    @relation(fields: [litterId], references: [id])
+  birthDate      DateTime
+  sex            String?
+  breed          String?
+  status         PigletStatus @default(WITH_MOTHER)
+  healthStatus   String?
+  
+  // Repayment tracking
+  returnedDate   DateTime?
+  returnedFromId String?
+  returnedFrom   Beneficiary? @relation("ReturnedFromBeneficiary", fields: [returnedFromId], references: [id])
+  
+  // Redistribution
+  newBeneficiaryId String? // the id of the beneficiary this piglet was given to
+  redistributedAt  DateTime?
+  
+  notes          String?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  transactions   FinanceTransaction[]
+  redistributions Redistribution[]
+  documents      Document[]
+}
+
+model Repayment {
+  id               String    @id @default(cuid())
+  beneficiaryId    String
+  beneficiary      Beneficiary @relation(fields: [beneficiaryId], references: [id])
+  sourcePigId      String
+  sourcePig        Pig       @relation(fields: [sourcePigId], references: [id])
+  targetPiglets    Int       @default(3)
+  returnedPiglets  Int       @default(0)
+  remainingPiglets Int       @default(3)
+  status           String    @default("PENDING") // PENDING, PARTIAL, COMPLETED
+  dueDate          DateTime?
+  completedAt      DateTime?
+  notes            String?
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Redistribution {
+  id                String    @id @default(cuid())
+  pigletId          String
+  piglet            Piglet    @relation(fields: [pigletId], references: [id])
+  fromBeneficiaryId String
+  fromBeneficiary   Beneficiary @relation("RedistributionFrom", fields: [fromBeneficiaryId], references: [id])
+  toBeneficiaryId   String
+  toBeneficiary     Beneficiary @relation("RedistributionTo", fields: [toBeneficiaryId], references: [id])
+  redistributionDate DateTime
+  approvedById      String?
+  notes             String?
+  
+  createdAt         DateTime  @default(now())
+}
+
+model VeterinaryRecord {
+  id             String    @id @default(cuid())
+  pigId          String
+  pig            Pig       @relation(fields: [pigId], references: [id])
+  veterinarianId String
+  veterinarian   User      @relation(fields: [veterinarianId], references: [id])
+  date           DateTime
+  activityType   String    // e.g., CHECKUP, VACCINATION, TREATMENT
+  diagnosis      String?
+  treatment      String?
+  medication     String?
+  vaccination    String?
+  notes          String?
+  followUpDate   DateTime?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  documents      Document[]
+}
+
+// Ensure alias mapping for backwards compatibility in UI pages we wrote
+model VeterinaryVisit {
+  id             String    @id @default(cuid())
+  pigId          String
+  pig            Pig       @relation(fields: [pigId], references: [id])
+  veterinarianId String
+  veterinarian   User      @relation(fields: [veterinarianId], references: [id])
+  date           DateTime
+  healthStatus   String
+  vaccination    String?
+  deworming      String?
+  disease        String?
+  treatment      String?
+  medication     String?
+  dosage         String?
+  followUpDate   DateTime?
+  recommendations String?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model FieldVisit {
+  id             String    @id @default(cuid())
+  beneficiaryId  String
+  beneficiary    Beneficiary @relation(fields: [beneficiaryId], references: [id])
+  pigId          String?
+  pig            Pig?      @relation(fields: [pigId], references: [id])
+  fieldOfficerId String
+  fieldOfficer   User      @relation(fields: [fieldOfficerId], references: [id])
+  date           DateTime
+  purpose        String
+  observations   String
+  pigCondition   String?
+  beneficiaryCondition String?
+  actionsTaken   String?
+  recommendations String?
+  nextVisitDate  DateTime?
+  status         String    @default("COMPLETED")
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  documents      Document[]
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Task {
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  assignedUserId String
+  assignedUser   User      @relation(fields: [assignedUserId], references: [id])
+  priority       TaskPriority @default(MEDIUM)
+  status         TaskStatus   @default(TODO)
+  dueDate        DateTime?
+  completedAt    DateTime?
+  
+  beneficiaryId  String?
+  beneficiary    Beneficiary? @relation(fields: [beneficiaryId], references: [id])
+  pigId          String?
+  pig            Pig?         @relation(fields: [pigId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum FinanceType {
+  INCOME
+  EXPENSE
+}
+
+enum FinanceStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model FinanceTransaction {
+  id             String    @id @default(cuid())
+  transactionId  String    @unique // Code
+  date           DateTime
+  type           FinanceType
+  category       String
+  amount         Decimal   @db.Decimal(12, 2)
+  description    String?
+  paymentMethod  String?
+  receiptUrl     String?
+  status         FinanceStatus @default(DRAFT)
+  
+  beneficiaryId  String?
+  beneficiary    Beneficiary? @relation(fields: [beneficiaryId], references: [id])
+  pigId          String?
+  pig            Pig?         @relation(fields: [pigId], references: [id])
+  pigletId       String?
+  piglet         Piglet?      @relation(fields: [pigletId], references: [id])
+  
+  createdById    String
+  createdBy      User      @relation("CreatedBy", fields: [createdById], references: [id])
+  approvedById   String?
+  approvedBy     User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt     DateTime?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  documents      Document[]
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  purpose   String
+  otpHash   String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  action      String
+  entityType  String
+  entityId    String
+  oldValue    String?   // JSON
+  newValue    String?   // JSON
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime  @default(now())
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  type              String
+  title             String
+  message           String
+  readAt            DateTime?
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdAt         DateTime @default(now())
+}
+
+model Document {
+  id                String   @id @default(cuid())
+  url               String
+  fileType          String
+  fileName          String
+  
+  beneficiaryId     String?
+  beneficiary       Beneficiary? @relation(fields: [beneficiaryId], references: [id])
+  
+  pigId             String?
+  pig               Pig? @relation(fields: [pigId], references: [id])
+  
+  pigletId          String?
+  piglet            Piglet? @relation(fields: [pigletId], references: [id])
+  
+  fieldVisitId      String?
+  fieldVisit        FieldVisit? @relation(fields: [fieldVisitId], references: [id])
+  
+  veterinaryRecordId String?
+  veterinaryRecord   VeterinaryRecord? @relation(fields: [veterinaryRecordId], references: [id])
+  
+  financeTransactionId String?
+  financeTransaction   FinanceTransaction? @relation(fields: [financeTransactionId], references: [id])
+  
+  createdAt         DateTime @default(now())
+}
