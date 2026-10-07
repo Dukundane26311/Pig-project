@@ -19,9 +19,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const fs = require('fs');
         const log = (msg: string) => {
-          fs.appendFileSync('nextauth-debug.log', new Date().toISOString() + ': ' + msg + '\n');
+          try {
+            const fs = require('fs');
+            fs.appendFileSync('nextauth-debug.log', new Date().toISOString() + ': ' + msg + '\n');
+          } catch (_) {}
           console.log(msg);
         };
         
@@ -33,7 +35,11 @@ export const authOptions: NextAuthOptions = {
 
         try {
           log("Fetching from spring boot...");
-          const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8081";
+          const backendUrl =
+            process.env.BACKEND_URL ||
+            (process.env.NODE_ENV === "production"
+              ? "https://pig-project-backend.onrender.com"
+              : "http://127.0.0.1:8081");
           const res = await fetch(`${backendUrl}/api/auth/login`, {
             method: "POST",
             headers: {
