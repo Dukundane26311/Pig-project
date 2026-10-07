@@ -6,10 +6,15 @@ import GalleryCollection from "@/components/public/gallery-collection";
 export const dynamic = "force-dynamic";
 
 export default async function GalleryPage() {
-  const items = await prisma.galleryItem.findMany({
-    where: { isPublished: true },
-    orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
-  });
+  let items: any[] = [];
+  try {
+    items = await prisma.galleryItem.findMany({
+      where: { isPublished: true },
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+    });
+  } catch (error) {
+    console.error("Failed to load gallery items:", error);
+  }
 
   const categories = Array.from(new Set(items.map((item) => item.category).filter(Boolean))) as string[];
 

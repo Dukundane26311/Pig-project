@@ -5,10 +5,15 @@ import { ArrowRight } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function TeamPage() {
-  const members = await prisma.teamMember.findMany({
-    where: { isPublished: true },
-    orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
-  });
+  let members: Awaited<ReturnType<typeof prisma.teamMember.findMany>> = [];
+  try {
+    members = await prisma.teamMember.findMany({
+      where: { isPublished: true },
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+    });
+  } catch (error) {
+    console.error("Failed to load team members:", error);
+  }
 
   return (
     <div className="min-h-screen bg-white text-[#1c2b23]">
@@ -46,7 +51,7 @@ export default async function TeamPage() {
                     <img src={member.photoUrl} alt={member.fullName} className="h-full w-full rounded-xl object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center rounded-xl bg-[#dfeae3] text-4xl font-bold text-[#2c5a43]">
-                      {member.fullName.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase() || "TM"}
+                      {member.fullName.split(" ").map((part: string) => part[0]).slice(0, 2).join("").toUpperCase() || "TM"}
                     </div>
                   )}
                 </div>

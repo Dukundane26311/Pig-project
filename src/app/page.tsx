@@ -5,25 +5,37 @@ import { ChevronRight, User, HandHeart } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function PublicHomePage() {
-  const [totalBeneficiaries, totalPigsDistributed, litters, returnedPiglets, teamMembers, galleryItems, heroContent] = await Promise.all([
-    prisma.beneficiary.count(),
-    prisma.pig.count(),
-    prisma.litter.aggregate({ _sum: { numberBorn: true } }),
-    prisma.piglet.count({ where: { status: "AVAILABLE_FOR_REDISTRIBUTION" } }),
-    prisma.teamMember.findMany({
-      where: { isPublished: true, isFeatured: true },
-      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
-      take: 4,
-    }),
-    prisma.galleryItem.findMany({
-      where: { isPublished: true },
-      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
-      take: 3,
-    }),
-    prisma.websiteContent.findFirst({
-      where: { page: "home", section: "hero" },
-    }),
-  ]);
+  let totalBeneficiaries = 0;
+  let totalPigsDistributed = 0;
+  let litters: any = { _sum: { numberBorn: 0 } };
+  let returnedPiglets = 0;
+  let teamMembers: any[] = [];
+  let galleryItems: any[] = [];
+  let heroContent: any = null;
+
+  try {
+    [totalBeneficiaries, totalPigsDistributed, litters, returnedPiglets, teamMembers, galleryItems, heroContent] = await Promise.all([
+      prisma.beneficiary.count(),
+      prisma.pig.count(),
+      prisma.litter.aggregate({ _sum: { numberBorn: true } }),
+      prisma.piglet.count({ where: { status: "AVAILABLE_FOR_REDISTRIBUTION" } }),
+      prisma.teamMember.findMany({
+        where: { isPublished: true, isFeatured: true },
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+        take: 4,
+      }),
+      prisma.galleryItem.findMany({
+        where: { isPublished: true },
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+        take: 3,
+      }),
+      prisma.websiteContent.findFirst({
+        where: { page: "home", section: "hero" },
+      }),
+    ]);
+  } catch (error) {
+    console.error("Failed to fetch homepage data from database:", error);
+  }
 
   const heroData = {
     title: heroContent?.title || "One Piglet. One Family. A Fund That Keeps Moving.",
