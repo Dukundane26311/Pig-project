@@ -1,12 +1,10 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Baby, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { markPigletReturned } from "@/app/actions/piglet";
 
-
-export const dynamic = 'force-dynamic';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
@@ -7,8 +7,6 @@ import { createCell } from "@/app/actions/location";
 import { LocationAddForm } from "@/components/LocationAddForm";
 import { LocationBreadcrumb } from "@/components/LocationBreadcrumb";
 
-
-export const dynamic = 'force-dynamic';
 
 export const dynamic = "force-dynamic";
 
