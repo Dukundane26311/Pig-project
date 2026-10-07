@@ -1,7 +1,10 @@
-import { createPig } from "@/app/actions/pig";
+﻿import { createPig } from "@/app/actions/pig";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewPigPage() {
   const beneficiaries = await prisma.beneficiary.findMany({

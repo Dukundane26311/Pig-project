@@ -1,8 +1,11 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Plus, Baby, Activity } from "lucide-react";
 import Link from "next/link";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +38,7 @@ export default async function PigDetailPage({ params }: { params: Promise<{ id: 
         <div>
           <h2 className="text-2xl font-bold font-serif text-[#1c2b23]">Pig Profile: {pig.tagNumber}</h2>
           <p className="mt-1 text-sm text-[#5d6e64]">
-            {pig.breed || 'Unknown breed'} • {pig.sex} • Current Status: 
+            {pig.breed || 'Unknown breed'} ΓÇó {pig.sex} ΓÇó Current Status: 
             <span className="ml-2 px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#c9577a]/10 text-[#c9577a]">
               {pig.status.replace(/_/g, ' ')}
             </span>
@@ -101,13 +104,13 @@ export default async function PigDetailPage({ params }: { params: Promise<{ id: 
                         <div>
                           <p className="font-medium text-[#1c2b23]">Born on {new Date(litter.dateOfBirth).toLocaleDateString()}</p>
                           <p className="text-sm text-[#5d6e64] mt-1">
-                            {litter.numberBorn} born • {litter.numberSurvived} survived • {litter.numberLost} lost
+                            {litter.numberBorn} born ΓÇó {litter.numberSurvived} survived ΓÇó {litter.numberLost} lost
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium text-[#c9577a]">{litter.piglets.length} active piglets</p>
                           <Link href={`/dashboard/litters/${litter.id}`} className="text-sm text-[#2c5a43] hover:underline mt-1 block">
-                            Manage Piglets →
+                            Manage Piglets ΓåÆ
                           </Link>
                         </div>
                       </div>

@@ -1,8 +1,11 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { createFieldVisit } from "@/app/actions/visit";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewVisitPage() {
   const beneficiaries = await prisma.beneficiary.findMany({

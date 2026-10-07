@@ -1,9 +1,12 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Baby, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { markPigletReturned } from "@/app/actions/piglet";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +36,7 @@ export default async function LitterDetailPage({ params }: { params: Promise<{ i
         <div>
           <h2 className="text-2xl font-bold font-serif text-[#1c2b23]">Litter Management</h2>
           <p className="mt-1 text-sm text-[#5d6e64]">
-            Mother: {litter.pig.tagNumber} • Born: {new Date(litter.dateOfBirth).toLocaleDateString()}
+            Mother: {litter.pig.tagNumber} ΓÇó Born: {new Date(litter.dateOfBirth).toLocaleDateString()}
           </p>
         </div>
       </div>
@@ -92,7 +95,7 @@ export default async function LitterDetailPage({ params }: { params: Promise<{ i
                         </button>
                       </form>
                     ) : (
-                      <span className="text-sm text-[#9db0a4]">Repaid ✓</span>
+                      <span className="text-sm text-[#9db0a4]">Repaid Γ£ô</span>
                     )}
                   </td>
                 </tr>

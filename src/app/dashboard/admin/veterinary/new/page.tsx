@@ -1,7 +1,10 @@
-import { createVeterinaryVisit } from "@/app/actions/veterinary";
+﻿import { createVeterinaryVisit } from "@/app/actions/veterinary";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewVetVisitPage({ searchParams }: { searchParams: Promise<{ pigId?: string }> }) {
   const { pigId } = await searchParams;

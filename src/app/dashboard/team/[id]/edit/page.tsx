@@ -1,10 +1,13 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { updateTeamMember } from "@/app/actions/team";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = "force-dynamic";
 

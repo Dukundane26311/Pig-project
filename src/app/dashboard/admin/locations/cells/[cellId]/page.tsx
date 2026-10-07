@@ -1,10 +1,13 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { createVillage } from "@/app/actions/location";
 import { LocationAddForm } from "@/components/LocationAddForm";
 import { LocationBreadcrumb } from "@/components/LocationBreadcrumb";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +71,7 @@ export default async function CellVillagesPage({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23] font-medium">
                     {village.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23]">{village.code || "—"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23]">{village.code || "ΓÇö"}</td>
                 </tr>
               ))}
             </tbody>

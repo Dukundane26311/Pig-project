@@ -1,7 +1,10 @@
-import { createTask } from "@/app/actions/task";
+﻿import { createTask } from "@/app/actions/task";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewTaskPage() {
   const users = await prisma.user.findMany({

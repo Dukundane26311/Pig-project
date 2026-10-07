@@ -1,5 +1,8 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { 
+
+export const dynamic = 'force-dynamic';
+
   Users, UserCheck, Clock, 
   PiggyBank, Package, ArrowDownRight, RefreshCw, HeartPulse, Sparkles,
   Stethoscope, Activity, FileText,

@@ -1,8 +1,11 @@
-import { createLitter } from "@/app/actions/litter";
+﻿import { createLitter } from "@/app/actions/litter";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewLitterPage({ searchParams }: { searchParams: Promise<{ pigId?: string }> }) {
   const { pigId } = await searchParams;

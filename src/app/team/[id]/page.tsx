@@ -1,6 +1,9 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Mail, Phone } from "lucide-react";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = "force-dynamic";
 

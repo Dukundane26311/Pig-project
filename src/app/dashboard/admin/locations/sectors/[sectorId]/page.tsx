@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
@@ -6,6 +6,9 @@ import Link from "next/link";
 import { createCell } from "@/app/actions/location";
 import { LocationAddForm } from "@/components/LocationAddForm";
 import { LocationBreadcrumb } from "@/components/LocationBreadcrumb";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +74,7 @@ export default async function SectorCellsPage({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23] font-medium">
                     {cell.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23]">{cell.code || "—"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23]">{cell.code || "ΓÇö"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#5d6e64]">{cell._count.villages}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link

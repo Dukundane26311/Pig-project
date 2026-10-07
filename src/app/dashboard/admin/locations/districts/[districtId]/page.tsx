@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
@@ -6,6 +6,9 @@ import Link from "next/link";
 import { createSector } from "@/app/actions/location";
 import { LocationAddForm } from "@/components/LocationAddForm";
 import { LocationBreadcrumb } from "@/components/LocationBreadcrumb";
+
+
+export const dynamic = 'force-dynamic';
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +72,7 @@ export default async function DistrictSectorsPage({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23] font-medium">
                     {sector.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23]">{sector.code || "—"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1c2b23]">{sector.code || "ΓÇö"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#5d6e64]">{sector._count.cells}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
