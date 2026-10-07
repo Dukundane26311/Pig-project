@@ -5,10 +5,33 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { PigHealthStatus } from "@prisma/client";
+
+const diagnosisHealthStatusMap: Record<string, PigHealthStatus> = {
+  healthy: "HEALTHY",
+  sick: "SICK",
+  illness: "SICK",
+  ill: "SICK",
+  treatment: "UNDER_TREATMENT",
+  "under treatment": "UNDER_TREATMENT",
+  recovering: "RECOVERED",
+  recovered: "RECOVERED",
+  critical: "CRITICAL",
+  deceased: "DECEASED",
+  dead: "DECEASED",
+};
+
+function getHealthStatusFromDiagnosis(diagnosis: string): PigHealthStatus | null {
+  const normalized = diagnosis.trim().toLowerCase();
+  return diagnosisHealthStatusMap[normalized] ?? null;
+}
 
 export async function createVeterinaryVisit(formData: FormData) {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
+  if (!['SUPER_ADMIN', 'VETERINARIAN'].includes(session.user.role)) {
+    throw new Error("Forbidden: Only Veterinarians or Admins can record exams.");
+  }
 
   const pigId = formData.get("pigId") as string;
   const diagnosis = formData.get("diagnosis") as string;
@@ -18,8 +41,11 @@ export async function createVeterinaryVisit(formData: FormData) {
   const notes = formData.get("notes") as string;
   const dateRaw = formData.get("date") as string;
   const followUpDateRaw = formData.get("followUpDate") as string;
+  const weight = parseFloat(formData.get("weight") as string) || null;
+  const bodyCondition = formData.get("bodyCondition") as string;
+  const status = ((formData.get("status") as string | null) || "COMPLETED").trim();
 
-  await prisma.veterinaryRecord.create({
+  const exam = await prisma.veterinaryRecord.create({
     data: {
       pigId,
       veterinarianId: session.user.id,
@@ -29,17 +55,44 @@ export async function createVeterinaryVisit(formData: FormData) {
       treatment,
       medication,
       notes,
+      weight,
+      bodyCondition,
+      status,
       followUpDate: followUpDateRaw ? new Date(followUpDateRaw) : null,
     }
   });
 
-  // Also update the pig's current overall health status based on diagnosis
-  await prisma.pig.update({
-    where: { id: pigId },
-    data: { healthStatus: diagnosis }
-  });
+  const healthStatus = getHealthStatusFromDiagnosis(diagnosis);
+  if (healthStatus) {
+    await prisma.pig.update({
+      where: { id: pigId },
+      data: { healthStatus }
+    });
+  }
 
-  revalidatePath("/dashboard/veterinary");
-  revalidatePath(`/dashboard/pigs/${pigId}`);
-  redirect("/dashboard/veterinary");
+  // If status is CRITICAL, alert admins
+  if (status === 'CRITICAL') {
+    const admins = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN' } });
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map(a => ({
+          userId: a.id,
+          type: 'HEALTH_ALERT',
+          title: 'Critical Pig Health Alert',
+          message: `A critical health issue was recorded for Pig ID: ${pigId}`,
+          relatedEntityType: 'VETERINARY_RECORD',
+          relatedEntityId: exam.id,
+        }))
+      });
+    }
+  }
+
+  revalidatePath("/dashboard/vet");
+  revalidatePath("/dashboard/admin/veterinary");
+  
+  if (session.user.role === 'SUPER_ADMIN') {
+    redirect("/dashboard/admin/veterinary");
+  } else {
+    redirect("/dashboard/vet");
+  }
 }

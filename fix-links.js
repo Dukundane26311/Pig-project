@@ -31,3 +31,5 @@ files.forEach(f => {
        .replace(/\`\/litters/g, '`/dashboard/litters');
   if (c !== old) fs.writeFileSync(f, c);
 });
+cd "C:\Users\IT MODERN LTD\Downloads\pig project\pig-project"
+npm.cmd run dev

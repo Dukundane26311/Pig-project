@@ -23,14 +23,14 @@ export async function createFinanceTransaction(formData: FormData) {
   await prisma.financeTransaction.create({
     data: {
       transactionId,
-      date: new Date(dateRaw),
+      transactionDate: new Date(dateRaw),
       type,
-      category,
+      reference: category,
       amount,
       description,
       paymentMethod,
-      createdById: session.user.id,
-      status: 'SUBMITTED', // default to submitted, waiting for approval
+      recordedById: session.user.id,
+      status: 'SUBMITTED',
     }
   });
 

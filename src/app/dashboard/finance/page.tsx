@@ -1,144 +1,168 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { TrendingUp, TrendingDown, Wallet, FileText, PlusCircle } from "lucide-react";
 import Link from "next/link";
-import { Plus, CreditCard, DollarSign, ArrowUpRight, ArrowDownRight, CheckCircle } from "lucide-react";
-import { approveTransaction } from "@/app/actions/finance";
+import { format } from "date-fns";
 
 export const dynamic = 'force-dynamic';
 
-export default async function FinancePage() {
-  const transactions = await prisma.financeTransaction.findMany({
-    include: { createdBy: true, approvedBy: true },
-    orderBy: { date: 'desc' },
-  });
+export default async function FinanceDashboard() {
+  const session = await getServerSession(authOptions);
 
-  const totals = transactions.reduce((acc, curr) => {
-    if (curr.status === 'APPROVED') {
-      if (curr.type === 'INCOME') acc.income += Number(curr.amount);
-      if (curr.type === 'EXPENSE') acc.expense += Number(curr.amount);
-    }
-    return acc;
-  }, { income: 0, expense: 0 });
+  if (!session || (session.user.role !== 'FINANCE_OFFICER' && session.user.role !== 'SUPER_ADMIN')) {
+    redirect("/dashboard");
+  }
 
-  const balance = totals.income - totals.expense;
+  const [incomeAggr, expenseAggr, allIncome, allExpenses] = await Promise.all([
+    prisma.financeTransaction.aggregate({ _sum: { amount: true }, where: { type: "INCOME" } }),
+    prisma.financeTransaction.aggregate({ _sum: { amount: true }, where: { type: "EXPENSE" } }),
+    prisma.financeTransaction.findMany({ 
+      where: { type: "INCOME" }, 
+      orderBy: { transactionDate: 'desc' }, 
+      take: 10,
+      include: { recordedBy: true }
+    }),
+    prisma.financeTransaction.findMany({ 
+      where: { type: "EXPENSE" }, 
+      orderBy: { transactionDate: 'desc' }, 
+      take: 10,
+      include: { recordedBy: true }
+    }),
+  ]);
+
+  const totalIncome = Number(incomeAggr._sum.amount || 0);
+  const totalExpenses = Number(expenseAggr._sum.amount || 0);
+  const balance = totalIncome - totalExpenses;
+
+  const quickActions = [
+    { label: "Record Income", href: "/dashboard/finance/new?type=INCOME", icon: PlusCircle },
+    { label: "Record Expense", href: "/dashboard/finance/new?type=EXPENSE", icon: PlusCircle },
+    { label: "Finance Reports", href: "/dashboard/admin/reports", icon: FileText },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-serif text-[#1c2b23]">Financial Management</h2>
-          <p className="mt-1 text-sm text-[#5d6e64]">Track income, expenses, and fund balance.</p>
-        </div>
-        <Link 
-          href="/dashboard/finance/new"
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#2c5a43] hover:bg-[#1c2b23] transition-colors"
-        >
-          <Plus className="-ml-1 mr-2 h-5 w-5" />
-          New Transaction
-        </Link>
+    <div className="space-y-8 max-w-7xl mx-auto pb-10">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5d6d64]">Finance Team</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#1b2d24]">Welcome back, {session?.user?.name}</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-[#d9e1d8] p-5">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-[#e4ede6] rounded-md p-3">
-              <DollarSign className="h-6 w-6 text-[#2c5a43]" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-[#5d6e64] truncate">Total Fund Balance</dt>
-                <dd className="text-2xl font-semibold font-serif text-[#1c2b23]">{balance.toLocaleString()} RWF</dd>
-              </dl>
-            </div>
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-[24px] border border-[#dfe7df] bg-white p-5 shadow-[0_10px_24px_rgba(16,28,23,0.03)]">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e3efe7] text-[#173d2e]">
+            <TrendingUp className="h-5 w-5" />
           </div>
+          <p className="kpi-label text-[#5d6d64] text-sm font-medium">Total Income</p>
+          <p className="mt-3 text-4xl font-bold text-[#1b2d24]">{totalIncome.toLocaleString()} RWF</p>
         </div>
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-[#d9e1d8] p-5">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-green-50 rounded-md p-3">
-              <ArrowUpRight className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-[#5d6e64] truncate">Total Income</dt>
-                <dd className="text-xl font-semibold font-serif text-green-600">{totals.income.toLocaleString()} RWF</dd>
-              </dl>
-            </div>
+
+        <div className="rounded-[24px] border border-[#dfe7df] bg-white p-5 shadow-[0_10px_24px_rgba(16,28,23,0.03)]">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7e3ea] text-[#a44d67]">
+            <TrendingDown className="h-5 w-5" />
           </div>
+          <p className="kpi-label text-[#5d6d64] text-sm font-medium">Total Expenses</p>
+          <p className="mt-3 text-4xl font-bold text-[#1b2d24]">{totalExpenses.toLocaleString()} RWF</p>
         </div>
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-[#d9e1d8] p-5">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-red-50 rounded-md p-3">
-              <ArrowDownRight className="h-6 w-6 text-red-600" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-[#5d6e64] truncate">Total Expenses</dt>
-                <dd className="text-xl font-semibold font-serif text-red-600">{totals.expense.toLocaleString()} RWF</dd>
-              </dl>
-            </div>
+
+        <div className="rounded-[24px] border border-[#dfe7df] bg-white p-5 shadow-[0_10px_24px_rgba(16,28,23,0.03)]">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef3da] text-[#536334]">
+            <Wallet className="h-5 w-5" />
           </div>
+          <p className="kpi-label text-[#5d6d64] text-sm font-medium">Current Balance</p>
+          <p className="mt-3 text-4xl font-bold text-[#1b2d24]">{balance.toLocaleString()} RWF</p>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-xl border border-[#d9e1d8] overflow-hidden">
-        {transactions.length > 0 ? (
+      <div className="rounded-[28px] border border-[#dfe7df] bg-white p-6 shadow-[0_10px_24px_rgba(16,28,23,0.03)]">
+        <h2 className="text-xl font-semibold text-[#1b2d24]">Quick actions</h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {quickActions.map(({ label, href, icon: Icon }) => (
+            <Link key={label} href={href} className="rounded-[20px] border border-[#dfe7df] bg-[#f8faf8] p-4 hover:border-[#173d2e] hover:bg-[#f2f7f3] transition-colors">
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#e3efe7] text-[#173d2e]">
+                <Icon className="h-4 w-4" />
+              </div>
+              <p className="text-sm font-semibold text-[#1b2d24]">{label}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* INCOME TABLE */}
+        <div className="bg-white shadow rounded-2xl border border-[#d9e1d8] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#d9e1d8] bg-[#f2f5f0] flex justify-between items-center">
+            <h2 className="text-lg font-bold text-[#1b2d24] flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-[#2c5a43]" /> Recent Income
+            </h2>
+            <Link href="/dashboard/finance/new?type=INCOME" className="text-sm text-[#2c5a43] hover:underline font-medium">Add Income</Link>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-[#d9e1d8]">
-              <thead className="bg-[#f2f5f0]">
+              <thead className="bg-[#f8faf8]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5d6e64] uppercase tracking-wider">Date & ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5d6e64] uppercase tracking-wider">Details</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5d6e64] uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5d6e64] uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-[#5d6e64] uppercase tracking-wider">Actions</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Date</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Source</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Amount</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Recorded By</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-[#d9e1d8]">
-                {transactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-[#1c2b23]">{t.transactionId}</div>
-                      <div className="text-sm text-[#5d6e64]">{new Date(t.date).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-[#1c2b23]">{t.category}</div>
-                      <div className="text-xs text-[#5d6e64] truncate max-w-xs">{t.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-bold ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
-                        {t.type === 'INCOME' ? '+' : '-'}{Number(t.amount).toLocaleString()} RWF
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        t.status === 'APPROVED' ? 'bg-[#e4ede6] text-[#2c5a43]' :
-                        t.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {t.status === 'SUBMITTED' && (
-                        <form action={approveTransaction}>
-                          <input type="hidden" name="transactionId" value={t.id} />
-                          <button type="submit" className="text-sm text-[#2c5a43] hover:underline font-medium inline-flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-1" /> Approve
-                          </button>
-                        </form>
-                      )}
-                    </td>
+                {allIncome.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-[#f8faf8] transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-[#1b2d24]">{format(new Date(tx.transactionDate), 'MMM d, yyyy')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-[#1b2d24] font-medium">{tx.reference || 'General'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-[#2c5a43]">+{Number(tx.amount).toLocaleString()} RWF</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-[#5d6e64]">{tx.recordedBy.name}</td>
                   </tr>
                 ))}
+                {allIncome.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-[#5d6e64]">No recent income records.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="p-12 text-center">
-            <CreditCard className="mx-auto h-12 w-12 text-[#9db0a4] mb-4" />
-            <h3 className="text-lg font-medium text-[#1c2b23] mb-1">No transactions found</h3>
-            <p className="text-[#5d6e64] mb-4">Record your first income or expense.</p>
+        </div>
+
+        {/* EXPENSE TABLE */}
+        <div className="bg-white shadow rounded-2xl border border-[#d9e1d8] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#d9e1d8] bg-[#f7e3ea] flex justify-between items-center">
+            <h2 className="text-lg font-bold text-[#1b2d24] flex items-center">
+              <TrendingDown className="h-5 w-5 mr-2 text-[#a44d67]" /> Recent Expenses
+            </h2>
+            <Link href="/dashboard/finance/new?type=EXPENSE" className="text-sm text-[#a44d67] hover:underline font-medium">Add Expense</Link>
           </div>
-        )}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-[#d9e1d8]">
+              <thead className="bg-[#fcf8fa]">
+                <tr>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Date</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Category</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Amount</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-[#5d6e64] uppercase">Recorded By</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-[#d9e1d8]">
+                {allExpenses.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-[#fcf8fa] transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-[#1b2d24]">{format(new Date(tx.transactionDate), 'MMM d, yyyy')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-[#1b2d24] font-medium">{tx.reference || 'General'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-[#a44d67]">{Number(tx.amount).toLocaleString()} RWF</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-[#5d6e64]">{tx.recordedBy.name}</td>
+                  </tr>
+                ))}
+                {allExpenses.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-[#5d6e64]">No recent expense records.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

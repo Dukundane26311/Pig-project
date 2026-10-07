@@ -6,38 +6,52 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export async function generatePigId() {
+  const year = new Date().getFullYear();
+  const lastPig = await prisma.pig.findFirst({
+    where: { tagNumber: { startsWith: `PIG-${year}-` } },
+    orderBy: { tagNumber: 'desc' }
+  });
+
+  if (!lastPig) return `PIG-${year}-000001`;
+
+  const lastSequence = parseInt(lastPig.tagNumber.split('-')[2]);
+  const newSequence = String(lastSequence + 1).padStart(6, '0');
+  
+  return `PIG-${year}-${newSequence}`;
+}
+
 export async function createPig(formData: FormData) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    throw new Error("Unauthorized");
+  if (!session) throw new Error("Unauthorized");
+  if (!['SUPER_ADMIN', 'FIELD_OFFICER'].includes(session.user.role)) {
+    throw new Error("Forbidden");
   }
 
   const beneficiaryId = formData.get("beneficiaryId") as string;
   const breed = formData.get("breed") as string;
-  const sex = formData.get("sex") as string;
+  const sexValue = formData.get("sex") as string | null;
+  const sex = sexValue && sexValue !== "" ? (sexValue === "MALE" ? "MALE" : "FEMALE") : null;
   const color = formData.get("color") as string;
-  const source = formData.get("source") as string;
-  const purchasePrice = parseFloat(formData.get("purchasePrice") as string) || 0;
-  
-  // Generate a random unique ID for the pig
-  const count = await prisma.pig.count();
-  const pigId = `PIG-${String(count + 1).padStart(6, '0')}`;
+
+  const tagNumber = await generatePigId();
 
   await prisma.pig.create({
     data: {
-      pigId,
-      beneficiaryId: beneficiaryId || null,
-      breed,
+      tagNumber,
+      currentBeneficiaryId: beneficiaryId || null,
+      breed: breed || null,
       sex,
-      color,
-      source,
-      purchasePrice,
+      notes: color || null,
       dateReceived: new Date(),
       status: 'REGISTERED',
     },
   });
 
-  revalidatePath("/dashboard/pigs");
+  revalidatePath("/dashboard/admin/pigs");
+  revalidatePath("/dashboard/field/pigs");
   revalidatePath("/");
-  redirect("/dashboard/pigs");
+  
+  if (session.user.role === 'SUPER_ADMIN') redirect("/dashboard/admin/pigs");
+  redirect("/dashboard/field/pigs");
 }

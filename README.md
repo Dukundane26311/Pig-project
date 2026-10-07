@@ -1,144 +1,197 @@
-# PIG PROJECT REVOLVING FUND
+# 🐷 Pig Project Revolving Fund
 
 **Value Protocols Rwanda**
 
-_“One Piglet. One Family. A Fund That Keeps Moving.”_
+> *"One Piglet. One Family. A Fund That Keeps Moving."*
 
 ---
 
-## 📖 Project Overview
-The **Pig Project Revolving Fund** is a comprehensive software platform designed for Value Protocols Rwanda. It combines a **Public Website** for donors and visitors with a **Secure Private Management Platform** for field officers, veterinarians, and finance administrators. 
+## Overview
 
-The core logic of the system handles the distribution of pigs to vulnerable families, tracks pregnancies and litters, and enforces the "3-Piglet Return" policy to sustain a continuous revolving fund that empowers the community.
+The **Pig Project Revolving Fund** is a full-stack management platform for Value Protocols Rwanda — an NGO running a pig revolving fund program.
 
-## ✨ Features
-### Public Website
-- **Impact Dashboard:** Real-time aggregated statistics directly from the database.
-- **Revolving Model Explanation:** Visual step-by-step breakdown of how the fund works.
-- **Responsive Design:** Beautiful, mobile-friendly landing pages.
+**Core Model:**
+A vulnerable family receives a pig → the pig reproduces → the family returns 3 piglets → those piglets are redistributed to the next family → the cycle continues.
 
-### Private Management Platform
-- **Role-Based Access Control (RBAC):** Restricts access based on roles (SUPER_ADMIN, PROJECT_MANAGER, FINANCE_OFFICER, etc.).
-- **Beneficiary & Livestock Management:** Complete CRUD for Families, Pigs, and Litters.
-- **Revolving Fund Tracking:** Monitors the lifecycle from pig distribution to the 3-piglet repayment.
-- **Financial Module:** Tracks income and expenses securely using PostgreSQL `Decimal` types.
-- **Veterinary Records:** Veterinarians can log checkups and automatically update livestock health statuses.
-- **Audit Logs:** Immutable tracking of all significant actions.
+---
 
-## 🏗 Architecture
-**Full-Stack Next.js Application:**
+## Architecture
+
 ```
-Client Browser (Public / Dashboard)
-↓
-Next.js (App Router / React Server Components)
-↓
-Server Actions (Secure Backend Logic / NextAuth Security)
-↓
-Prisma ORM
-↓
-PostgreSQL Database
+User Browser
+    │
+    ▼
+Next.js Frontend (Netlify)
+    │ HTTPS REST API
+    ▼
+FastAPI Backend (Render / Railway / Fly.io)
+    │
+    ▼
+PostgreSQL Database (Managed)
 ```
 
-## 📋 Requirements
-- Node.js (v18.17 or higher)
-- npm, yarn, or pnpm
-- PostgreSQL (v14 or higher)
+---
 
-## ⚙️ Installation
+## Project Structure
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/pig-project.git
-   cd pig-project
-   ```
+```
+pig-project/
+├── frontend/          # Next.js + TypeScript + Tailwind
+├── backend/           # Python FastAPI + SQLAlchemy + Alembic
+├── docker-compose.yml # Local development
+└── README.md
+```
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+---
 
-## 🔐 Environment Variables
-You must create a `.env` file in the root directory. Use the provided `.env.example` as a template.
+## Quick Start (Local Development)
+
+### Prerequisites
+- Node.js 18+
+- Python 3.12+
+- PostgreSQL 16+ (or Docker)
+
+### 1. Clone & Start Database
 
 ```bash
+# With Docker (recommended):
+docker-compose up db -d
+
+# Or use your local PostgreSQL instance
+```
+
+### 2. Backend
+
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate (Windows PowerShell)
+.venv\Scripts\Activate.ps1
+
+# Activate (macOS/Linux)
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy and configure environment
 cp .env.example .env
-```
-Ensure you update the `DATABASE_URL` and `NEXTAUTH_SECRET` before running the application.
+# Edit .env with your values
 
-## 🗄 Database Setup & Prisma Migration
-Ensure your PostgreSQL server is running. Then, sync the Prisma schema with your database:
+# Run database migrations
+alembic upgrade head
+
+# Seed initial data
+python -m app.db.seed
+
+# Start development server
+uvicorn app.main:app --reload --port 8000
+```
+
+Backend API: http://localhost:8000  
+API Docs: http://localhost:8000/docs  
+ReDoc: http://localhost:8000/redoc
+
+### 3. Frontend
 
 ```bash
-npx prisma db push
-```
-*(For production, you should use `npx prisma migrate deploy` instead).*
+cd frontend
 
-## 🌱 Seed Database
-Seed the database with the initial `SUPER_ADMIN` account and necessary setup data:
+# Install dependencies
+npm install
 
-```bash
-npx tsx prisma/seed.ts
-```
-**Default Admin Credentials:**
-- **Email:** `admin@valueprotocols.rw`
-- **Password:** `Admin@123` *(Change this immediately in production)*
+# Copy and configure environment
+cp .env.example .env.local
+# Set NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
-## 🚀 Local Development
-Start the development server:
-
-```bash
+# Start development server
 npm run dev
 ```
-Navigate to [http://localhost:3000](http://localhost:3000) to view the public website, or `/login` to access the dashboard.
 
-## 🧪 Testing
-*(Tests can be configured here using Jest/Playwright)*
-Currently, manual testing is recommended for the **3-piglet repayment logic**:
-1. Assign a Pig to a Beneficiary.
-2. Create a Litter for that Pig.
-3. Log the return of 3 Piglets.
-4. Verify the Beneficiary's status upgrades automatically.
+Frontend: http://localhost:3000
 
-## 🛠 Build
-To create a production build:
+---
+
+## Default Credentials (Development)
+
+> ⚠️ Change immediately in production!
+
+| Role | Email | Password |
+|------|-------|----------|
+| Super Admin | admin@valueprotocols.rw | admin123 |
+
+The backend seeds this account automatically on first run. Use these values when signing in at http://localhost:3000/login.
+
+---
+
+## Running Tests
+
 ```bash
-npm run build
+cd backend
+pytest tests/ -v
 ```
 
-## ☁️ GitHub Deployment
-To push this project to GitHub securely:
-```bash
-git init
-git add .
-git commit -m "Initial production build"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-git push -u origin main
-```
-*Note: Your `.env` file is excluded via `.gitignore`.*
+---
 
-## 🌐 Netlify Deployment
-1. Connect your GitHub repository to Netlify.
-2. Set the Build Command to: `npm run build`
-3. Set the Publish Directory to: `.next`
-4. In Netlify's **Environment Variables** settings, add all variables from your `.env` file.
-5. Deploy the site.
+## Production Deployment
 
-### Production Environment Variables
-In Netlify/Production, ensure you set:
-- `DATABASE_URL`: URL to your cloud Postgres (e.g., Supabase, Neon, AWS RDS).
-- `NEXTAUTH_URL`: Your actual domain (e.g., `https://my-pig-project.netlify.app`).
-- `NEXTAUTH_SECRET`: A strong, randomly generated 32+ character string.
+### Backend (Render / Railway / Fly.io)
 
-## 🛡 Security
-- **Authentication:** Sessions are secured via NextAuth.
-- **Passwords:** Hashed using bcrypt.
-- **Public/Private Data:** GPS, phone numbers, and financial data are strictly protected by server-side role validation.
-- **OTP:** (Placeholder) Security Center is prepared for OTP implementations for financial approvals.
+1. Push to GitHub
+2. Connect repository to your hosting provider
+3. Set environment variables (see `backend/.env.example`)
+4. Set start command: `gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT`
+5. Run migrations on deploy: `alembic upgrade head`
 
-## 💾 Backup Strategy
-It is highly recommended to configure automated daily backups on your managed PostgreSQL provider (e.g., Supabase or AWS RDS) to prevent data loss of the Revolving Fund tracking.
+### Frontend (Netlify)
 
-## 🆘 Troubleshooting
-- **PrismaClientUnknownRequestError (Date parsing):** If you enter a year extremely far in the future (e.g., year 30000), the system will safely ignore it to prevent a crash.
-- **Database Connection Issues:** Ensure your `DATABASE_URL` is correct and your Postgres instance accepts connections. If deploying to Netlify, ensure your database allows external IP connections.
+1. Connect GitHub repository
+2. Build command: `npm run build`
+3. Publish directory: `.next`
+4. Set `NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1`
+
+### Database
+
+Use managed PostgreSQL:
+- [Neon](https://neon.tech) — Free tier available
+- [Supabase](https://supabase.com)
+- [Railway](https://railway.app)
+- [Amazon RDS](https://aws.amazon.com/rds/)
+
+---
+
+## Environment Variables
+
+See:
+- `backend/.env.example`
+- `frontend/.env.example`
+
+---
+
+## API Documentation
+
+- Swagger UI: `https://api.yourdomain.com/docs`
+- ReDoc: `https://api.yourdomain.com/redoc`
+
+---
+
+## Security
+
+- JWT authentication (access + refresh tokens)
+- Argon2 password hashing
+- Role-Based Access Control (RBAC)
+- OTP for sensitive operations
+- Audit logging
+- Rate limiting
+- CORS restrictions
+- SQL injection protection via SQLAlchemy ORM
+- No secrets in repository
+
+---
+
+## License
+
+Proprietary — Value Protocols Rwanda

@@ -36,7 +36,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#f2f5f0] px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-[#d9e1d8]">
         <div className="bg-[#2c5a43] p-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2 font-serif">Pig Project</h1>
+          <h1 className="text-2xl font-semibold text-white mb-2 font-serif tracking-tight">Pig Project</h1>
           <p className="text-[#e4ede6] text-sm">Value Protocols, Rwanda</p>
         </div>
         

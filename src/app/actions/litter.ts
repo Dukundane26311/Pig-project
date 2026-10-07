@@ -12,40 +12,34 @@ export async function createLitter(formData: FormData) {
 
   const pigId = formData.get("pigId") as string;
   const dateOfBirth = formData.get("dateOfBirth") as string;
-  const numberOfPigletsBorn = parseInt(formData.get("numberOfPigletsBorn") as string, 10);
+  const numberBorn = parseInt(formData.get("numberBorn") as string, 10);
   const numberSurvived = parseInt(formData.get("numberSurvived") as string, 10);
-  const numberLost = numberOfPigletsBorn - numberSurvived;
+  const numberLost = numberBorn - numberSurvived;
 
-  // Create the litter
   const litter = await prisma.litter.create({
     data: {
-      pigId,
-      dateOfBirth: new Date(dateOfBirth),
-      numberOfPigletsBorn,
-      numberSurvived,
-      numberLost,
+      motherPigId: pigId,
+      actualBirthDate: new Date(dateOfBirth),
+      numberBorn,
+      numberAlive: numberSurvived,
+      numberDead: numberLost,
+      recordedById: session.user.id,
     }
   });
 
-  // Automatically generate Piglet records for the survivors
   const pigletCount = await prisma.piglet.count();
-  
-  const pigletsData = Array.from({ length: numberSurvived }).map((_, index) => {
-    return {
-      pigletId: `PGL-${String(pigletCount + index + 1).padStart(6, '0')}`,
-      litterId: litter.id,
-      birthDate: new Date(dateOfBirth),
-      status: 'WITH_MOTHER' as const,
-    };
-  });
+
+  const pigletsData = Array.from({ length: numberSurvived }).map((_, index) => ({
+    tagNumber: `PGL-${String(pigletCount + index + 1).padStart(6, '0')}`,
+    litterId: litter.id,
+    birthDate: new Date(dateOfBirth),
+    status: 'WITH_MOTHER' as const,
+  }));
 
   if (pigletsData.length > 0) {
-    await prisma.piglet.createMany({
-      data: pigletsData
-    });
+    await prisma.piglet.createMany({ data: pigletsData });
   }
 
-  // Update mother pig status
   await prisma.pig.update({
     where: { id: pigId },
     data: { status: 'PIGLETS_RECORDED' }

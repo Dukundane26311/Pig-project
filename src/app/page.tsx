@@ -1,138 +1,298 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowRight, Leaf, Heart, Users, LineChart, Baby, RefreshCw } from "lucide-react";
+import { ChevronRight, User, HandHeart } from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function PublicHomePage() {
-  // Aggregate public statistics
-  const totalBeneficiaries = await prisma.beneficiary.count();
-  const totalPigsDistributed = await prisma.pig.count();
-  const litters = await prisma.litter.aggregate({ _sum: { numberOfPigletsBorn: true } });
-  const returnedPiglets = await prisma.piglet.count({ where: { status: 'AVAILABLE_FOR_REDISTRIBUTION' } });
-  
+  const [totalBeneficiaries, totalPigsDistributed, litters, returnedPiglets, teamMembers, galleryItems, heroContent] = await Promise.all([
+    prisma.beneficiary.count(),
+    prisma.pig.count(),
+    prisma.litter.aggregate({ _sum: { numberBorn: true } }),
+    prisma.piglet.count({ where: { status: "AVAILABLE_FOR_REDISTRIBUTION" } }),
+    prisma.teamMember.findMany({
+      where: { isPublished: true, isFeatured: true },
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+      take: 4,
+    }),
+    prisma.galleryItem.findMany({
+      where: { isPublished: true },
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+      take: 3,
+    }),
+    prisma.websiteContent.findFirst({
+      where: { page: "home", section: "hero" },
+    }),
+  ]);
+
+  const heroData = {
+    title: heroContent?.title || "One Piglet. One Family. A Fund That Keeps Moving.",
+    description: heroContent?.description || "The revolving livestock model helps families build stable income through pig production, communal accountability, and a cycle of return that grows opportunity across Rwanda.",
+    primaryButtonText: heroContent?.primaryButtonText || "Learn How It Works",
+    primaryButtonLink: heroContent?.primaryButtonLink || "#how-it-works",
+    secondaryButtonText: heroContent?.secondaryButtonText || "See Our Impact",
+    secondaryButtonLink: heroContent?.secondaryButtonLink || "#impact",
+    imageUrl: heroContent?.imageUrl || "/pig-hero-real.jpg",
+    imageAlt: heroContent?.imageAlt || "Pig production and community support in Rwanda",
+  };
+
   return (
-    <div className="min-h-screen bg-white font-sans text-[#1c2b23]">
-      
-      {/* HEADER */}
-      <header className="border-b border-[#d9e1d8] bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center">
-              <Leaf className="h-8 w-8 text-[#2c5a43]" />
-              <span className="ml-3 text-2xl font-bold font-serif text-[#1c2b23]">Pig Project</span>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="#about" className="text-[#5d6e64] hover:text-[#2c5a43] font-medium">About</Link>
-              <Link href="#how-it-works" className="text-[#5d6e64] hover:text-[#2c5a43] font-medium">How it Works</Link>
-              <Link href="#impact" className="text-[#5d6e64] hover:text-[#2c5a43] font-medium">Impact</Link>
-              <Link href="#stories" className="text-[#5d6e64] hover:text-[#2c5a43] font-medium">Stories</Link>
-            </nav>
-            <div className="flex items-center space-x-4">
-              <Link href="/login" className="text-[#5d6e64] hover:text-[#1c2b23] font-medium hidden sm:block">
-                Staff Login
-              </Link>
-              <Link href="#support" className="bg-[#2c5a43] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#1c2b23] transition-colors">
-                Support Project
-              </Link>
-            </div>
+    <div className="min-h-screen bg-white text-neutral-900 font-sans selection:bg-neutral-200">
+      <header className="sticky top-0 z-50 border-b border-neutral-100 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+          <Link href="/" aria-label="Pig Project Rwanda home" className="flex shrink-0 items-center">
+            <span className="text-xl font-bold tracking-tight text-neutral-900">Pig Project<span className="text-neutral-400 font-medium">Rwanda</span></span>
+          </Link>
+
+          <nav className="hidden items-center gap-8 text-sm font-medium text-neutral-600 md:flex">
+            <Link href="#about" className="hover:text-neutral-900 transition-colors">About</Link>
+            <Link href="#how-it-works" className="hover:text-neutral-900 transition-colors">Model</Link>
+            <Link href="#impact" className="hover:text-neutral-900 transition-colors">Impact</Link>
+            <Link href="/gallery" className="hover:text-neutral-900 transition-colors">Gallery</Link>
+            <Link href="/team" className="hover:text-neutral-900 transition-colors">Team</Link>
+            <Link href="/contact" className="hover:text-neutral-900 transition-colors">Contact</Link>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors">
+              Staff Login
+            </Link>
+            <Link href="/contact" className="hidden rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 sm:inline-flex">
+              Get Involved
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative bg-[#f2f5f0] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="max-w-3xl">
-            <h1 className="text-5xl md:text-6xl font-bold font-serif text-[#1c2b23] mb-6 leading-tight">
-              One Piglet. One Family. A Fund That Keeps Moving.
-            </h1>
-            <p className="text-xl text-[#5d6e64] mb-10 leading-relaxed">
-              The Pig Project Revolving Fund supports vulnerable families in Rwanda through agricultural empowerment, generating a continuous cycle of community wealth.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="#how-it-works" className="bg-[#c9577a] text-white px-8 py-4 rounded-lg font-bold text-center hover:bg-[#a63a3a] transition-colors inline-flex items-center justify-center">
-                Learn How It Works <ArrowRight className="ml-2 h-5 w-5" />
+      <main>
+        {/* HERO SECTION */}
+        <section className="relative px-6 py-20 lg:px-8 lg:py-32">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div>
+                <p className="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-4">Empowering Communities</p>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 leading-[1.1]">
+                  {heroData.title}
+                </h1>
+                <p className="mt-6 text-lg sm:text-xl leading-relaxed text-neutral-600 max-w-lg">
+                  {heroData.description}
+                </p>
+                <div className="mt-10 flex flex-wrap gap-4">
+                  <Link href={heroData.primaryButtonLink} className="inline-flex items-center justify-center rounded bg-neutral-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800">
+                    {heroData.primaryButtonText}
+                  </Link>
+                  <Link href={heroData.secondaryButtonLink} className="inline-flex items-center justify-center rounded border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-50">
+                    {heroData.secondaryButtonText}
+                  </Link>
+                </div>
+              </div>
+              <div className="relative aspect-[4/3] lg:aspect-square w-full">
+                <img src={heroData.imageUrl} alt={heroData.imageAlt} className="absolute inset-0 w-full h-full object-cover rounded-sm shadow-sm" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* MISSION SECTION */}
+        <section id="about" className="bg-neutral-50 border-y border-neutral-200 px-6 py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">
+                  A Practical Pathway out of Vulnerability
+                </h2>
+                <p className="mt-6 text-lg leading-relaxed text-neutral-600">
+                  We work with families facing limited resources, difficult housing conditions, and unstable income. Beyond the first pig, we focus on care, healthy breeding, and local accountability for sustained growth.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div>
+                  <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded bg-neutral-200">
+                    <User className="h-5 w-5 text-neutral-700" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-neutral-900">Households in need</h3>
+                  <p className="mt-2 text-neutral-600 leading-relaxed text-sm">
+                    Partnering directly with families to provide resources that spark immediate economic change.
+                  </p>
+                </div>
+                <div>
+                  <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded bg-neutral-200">
+                    <HandHeart className="h-5 w-5 text-neutral-700" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-neutral-900">Long-term support</h3>
+                  <p className="mt-2 text-neutral-600 leading-relaxed text-sm">
+                    Building a foundation of veterinary care, agricultural training, and community solidarity.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section id="how-it-works" className="px-6 py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-3xl mb-16">
+              <h2 className="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">
+                A Revolving Model
+              </h2>
+              <p className="mt-4 text-lg text-neutral-600">
+                Our approach is simple, accountable, and designed to scale naturally within communities.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-12">
+              {[
+                { number: "01", title: "Initial Grant", text: "A selected household receives a healthy pig and initial guidance for care and management." },
+                { number: "02", title: "Growth & Care", text: "The animal grows, reproduces, and the family builds new income potential through healthy livestock care." },
+                { number: "03", title: "Return Cycle", text: "The household contributes back to the fund by returning three piglets to continue the cycle." },
+                { number: "04", title: "Community Expansion", text: "The returned piglets help another family begin the same journey of dignity, resilience, and growth." },
+              ].map((step) => (
+                <div key={step.number} className="relative border-t border-neutral-200 pt-6">
+                  <div className="text-sm font-bold tracking-widest text-neutral-400 mb-3">{step.number}</div>
+                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">{step.title}</h3>
+                  <p className="text-neutral-600 leading-relaxed text-sm">{step.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* IMPACT NUMBERS */}
+        <section id="impact" className="bg-neutral-900 text-white px-6 py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-16">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Measurable Impact</h2>
+              </div>
+              <div>
+                <p className="text-lg text-neutral-400 leading-relaxed">
+                  These figures reflect our current project records and show the real scale of our work across families, pig distribution, and piglet return cycles.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-neutral-800 pt-12">
+              <div>
+                <div className="text-5xl font-light tracking-tight mb-2">{totalBeneficiaries}</div>
+                <div className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Families Supported</div>
+              </div>
+              <div>
+                <div className="text-5xl font-light tracking-tight mb-2">{totalPigsDistributed}</div>
+                <div className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Pigs Distributed</div>
+              </div>
+              <div>
+                <div className="text-5xl font-light tracking-tight mb-2">{litters._sum.numberBorn ?? 0}</div>
+                <div className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Piglets Born</div>
+              </div>
+              <div>
+                <div className="text-5xl font-light tracking-tight mb-2">{returnedPiglets}</div>
+                <div className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Piglets Returned</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* GALLERY / STORIES */}
+        <section id="stories" className="px-6 py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-3xl font-bold tracking-tight text-neutral-900">Field Stories</h2>
+              <Link href="/gallery" className="hidden sm:flex items-center text-sm font-medium text-neutral-900 hover:text-neutral-600 transition-colors">
+                View full gallery <ChevronRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            {galleryItems.length === 0 ? (
+              <div className="border border-neutral-200 rounded p-12 text-center text-neutral-500 text-sm">
+                Gallery updates coming soon.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                {galleryItems.map((item) => (
+                  <article key={item.id} className="group cursor-pointer">
+                    <div className="aspect-[4/3] overflow-hidden rounded bg-neutral-100 mb-4">
+                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-neutral-900">{item.title}</h3>
+                    {item.location && <p className="text-sm text-neutral-500 mt-1">{item.location}</p>}
+                  </article>
+                ))}
+              </div>
+            )}
+            <div className="mt-8 sm:hidden">
+              <Link href="/gallery" className="inline-flex w-full items-center justify-center rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-50">
+                View full gallery
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* IMPACT STATISTICS */}
-      <section id="impact" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold font-serif text-[#1c2b23] mb-4">Our Public Impact</h2>
-            <p className="text-[#5d6e64] max-w-2xl mx-auto">Real-time statistics directly from our field operations database.</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center p-8 bg-[#f2f5f0] rounded-2xl">
-              <Users className="h-10 w-10 text-[#2c5a43] mx-auto mb-4" />
-              <div className="text-4xl font-bold font-serif text-[#1c2b23] mb-2">{totalBeneficiaries}</div>
-              <div className="text-[#5d6e64] font-medium">Families Supported</div>
+        {/* TEAM */}
+        <section className="bg-neutral-50 border-t border-neutral-200 px-6 py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl mb-16">
+              <h2 className="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">Our Team</h2>
+              <p className="mt-4 text-lg text-neutral-600">
+                Skilled, community-rooted, and committed to long-term change.
+              </p>
             </div>
-            <div className="text-center p-8 bg-[#f2f5f0] rounded-2xl">
-              <Heart className="h-10 w-10 text-[#c9577a] mx-auto mb-4" />
-              <div className="text-4xl font-bold font-serif text-[#1c2b23] mb-2">{totalPigsDistributed}</div>
-              <div className="text-[#5d6e64] font-medium">Pigs Distributed</div>
-            </div>
-            <div className="text-center p-8 bg-[#f2f5f0] rounded-2xl">
-              <Baby className="h-10 w-10 text-[#2c5a43] mx-auto mb-4" />
-              <div className="text-4xl font-bold font-serif text-[#1c2b23] mb-2">{litters._sum.numberOfPigletsBorn || 0}</div>
-              <div className="text-[#5d6e64] font-medium">Piglets Born</div>
-            </div>
-            <div className="text-center p-8 bg-[#f2f5f0] rounded-2xl">
-              <RefreshCw className="h-10 w-10 text-[#c9577a] mx-auto mb-4" />
-              <div className="text-4xl font-bold font-serif text-[#1c2b23] mb-2">{returnedPiglets}</div>
-              <div className="text-[#5d6e64] font-medium">Piglets Returned</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-24 bg-[#1c2b23] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-3xl font-bold font-serif mb-6">The Revolving Fund Model</h2>
-            <p className="text-[#9db0a4] max-w-2xl mx-auto text-lg">A sustainable approach to community development that ensures every donation multiplies its impact.</p>
+            {teamMembers.length === 0 ? (
+              <div className="border border-neutral-200 bg-white rounded p-8 text-sm text-neutral-500">
+                Team profiles are being updated.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                {teamMembers.map((member) => (
+                  <div key={member.id}>
+                    <div className="aspect-square overflow-hidden rounded bg-neutral-200 mb-4">
+                      {member.photoUrl ? (
+                        <img src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-2xl font-light text-neutral-400">{member.fullName.slice(0, 2).toUpperCase()}</div>
+                      )}
+                    </div>
+                    <h3 className="text-base font-semibold text-neutral-900">{member.fullName}</h3>
+                    <p className="text-sm text-neutral-500">{member.role}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+        </section>
+      </main>
 
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="relative">
-              <div className="bg-[#243329] p-8 rounded-2xl h-full border border-[#2d3d34]">
-                <div className="text-5xl font-serif text-[#c9577a] mb-6 opacity-50">01</div>
-                <h3 className="text-xl font-bold mb-3">Family Receives a Pig</h3>
-                <p className="text-[#9db0a4]">A vulnerable family is selected by our field officers and receives a healthy pig, veterinary support, and training.</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-[#243329] p-8 rounded-2xl h-full border border-[#2d3d34]">
-                <div className="text-5xl font-serif text-[#6fb08e] mb-6 opacity-50">02</div>
-                <h3 className="text-xl font-bold mb-3">Piglets are Born</h3>
-                <p className="text-[#9db0a4]">The pig grows and reproduces. Our veterinarians track the pregnancy and record the litter to ensure safe delivery.</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-[#243329] p-8 rounded-2xl h-full border border-[#2d3d34]">
-                <div className="text-5xl font-serif text-[#c9577a] mb-6 opacity-50">03</div>
-                <h3 className="text-xl font-bold mb-3">3 Piglets Returned</h3>
-                <p className="text-[#9db0a4]">The family repays the fund by returning 3 piglets. These are redistributed to new families, and the cycle continues.</p>
-              </div>
-            </div>
+      <footer className="bg-white border-t border-neutral-200 py-12 px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-2">
+            <Link href="/" className="inline-flex items-center">
+              <span className="text-xl font-bold tracking-tight text-neutral-900">Pig Project<span className="text-neutral-400 font-medium">Rwanda</span></span>
+            </Link>
+            <p className="mt-4 text-sm text-neutral-500 max-w-sm leading-relaxed">
+              One Piglet. One Family. A Fund That Keeps Moving. Creating sustainable pathways out of vulnerability through livestock micro-grants.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-neutral-900 mb-4">Navigation</h3>
+            <ul className="space-y-3 text-sm text-neutral-600">
+              <li><Link href="#about" className="hover:text-neutral-900 transition-colors">About</Link></li>
+              <li><Link href="#how-it-works" className="hover:text-neutral-900 transition-colors">Model</Link></li>
+              <li><Link href="#impact" className="hover:text-neutral-900 transition-colors">Impact</Link></li>
+              <li><Link href="/gallery" className="hover:text-neutral-900 transition-colors">Gallery</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-neutral-900 mb-4">Connect</h3>
+            <ul className="space-y-3 text-sm text-neutral-600">
+              <li><Link href="/contact" className="hover:text-neutral-900 transition-colors">Contact Us</Link></li>
+              <li><Link href="/team" className="hover:text-neutral-900 transition-colors">Our Team</Link></li>
+              <li><Link href="/login" className="hover:text-neutral-900 transition-colors">Staff Portal</Link></li>
+            </ul>
           </div>
         </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-[#f2f5f0] border-t border-[#d9e1d8] py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center mb-4 md:mb-0">
-            <Leaf className="h-6 w-6 text-[#2c5a43] mr-2" />
-            <span className="text-lg font-bold font-serif text-[#1c2b23]">Pig Project Rwanda</span>
-          </div>
-          <p className="text-[#5d6e64] text-sm">Managed by Value Protocols. All rights reserved.</p>
+        <div className="mx-auto max-w-7xl mt-12 pt-8 border-t border-neutral-100 text-xs text-neutral-400 flex flex-col md:flex-row items-center justify-between">
+          <p>© {new Date().getFullYear()} Pig Project Rwanda. All rights reserved.</p>
         </div>
       </footer>
     </div>
