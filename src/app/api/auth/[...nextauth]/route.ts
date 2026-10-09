@@ -27,27 +27,30 @@ export const authOptions: NextAuthOptions = {
           console.log(msg);
         };
         
-        log("LOGIN ATTEMPT WITH: " + credentials?.email);
-        if (!credentials?.email || !credentials?.password) {
+        const cleanEmail = String(credentials?.email || "").trim().toLowerCase();
+        const cleanPassword = String(credentials?.password || "").trim();
+
+        log("LOGIN ATTEMPT WITH: " + cleanEmail);
+        if (!cleanEmail || !cleanPassword) {
           log("No credentials provided");
           throw new Error("Invalid credentials");
         }
 
         try {
-          log("Fetching from spring boot...");
           const backendUrl =
             process.env.BACKEND_URL ||
             (process.env.NODE_ENV === "production"
               ? "https://pig-project-backend.onrender.com"
               : "http://127.0.0.1:8081");
+          log("Fetching from spring boot at " + backendUrl + "...");
           const res = await fetch(`${backendUrl}/api/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
+              email: cleanEmail,
+              password: cleanPassword,
             }),
           });
 
@@ -57,11 +60,13 @@ export const authOptions: NextAuthOptions = {
 
           if (res.ok && data.success && data.data) {
             const user = data.data;
-            const email = String(user.email || "").trim().toLowerCase();
-            log("Login successful, user: " + email);
+            const email = String(user.email || cleanEmail).trim().toLowerCase();
+            log("Backend login successful for user: " + email);
 
-            const mappedUser = email
-              ? await prisma.user.upsert({
+            let mappedUser = null;
+            try {
+              if (email) {
+                mappedUser = await prisma.user.upsert({
                   where: { email },
                   update: {
                     name: user.name || user.email || "System User",
@@ -75,8 +80,11 @@ export const authOptions: NextAuthOptions = {
                     role: (normalizeRole(user.role) || "FIELD_OFFICER") as any,
                     isActive: true,
                   },
-                })
-              : null;
+                });
+              }
+            } catch (dbErr: any) {
+              console.error("Warning: Prisma user sync failed during login:", dbErr?.message || dbErr);
+            }
 
             return {
               id: (mappedUser?.id ?? user.id?.toString() ?? email).toString(),
@@ -86,12 +94,12 @@ export const authOptions: NextAuthOptions = {
               token: user.token,
             } as any;
           } else {
-            log("Login failed on backend: " + data.message);
+            log("Login failed on backend: " + (data?.message || "Unknown error"));
             return null;
           }
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : "Unknown error";
-          log("Exception during login fetch: " + message);
+          log("Exception during login: " + message);
           return null;
         }
       }

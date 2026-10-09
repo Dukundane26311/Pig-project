@@ -17,14 +17,21 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
     const res = await signIn("credentials", {
-      email,
-      password,
+      email: trimmedEmail,
+      password: trimmedPassword,
       redirect: false,
     });
 
     if (res?.error) {
-      setError(res.error);
+      setError(
+        res.error === "CredentialsSignin"
+          ? "Invalid email or password. Please verify your credentials."
+          : res.error
+      );
       setLoading(false);
     } else {
       router.push("/dashboard");
