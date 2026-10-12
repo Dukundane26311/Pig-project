@@ -63,10 +63,21 @@ a {
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Section anchor offset — accounts for the fixed 64px navbar */
+section[id] {
+  scroll-margin-top: 64px;
+}
+
+/* Hero: true 100dvh on supporting browsers */
+#home {
+  height: 100dvh;
+}
+
 ::selection {
   background: rgba(4, 120, 87, 0.16);
   color: #064e3b;
 }
+
 
 /* Eliminate AI-generated clunky serif typography in favor of modern human UI typography */
 .font-serif {
