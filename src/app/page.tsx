@@ -98,124 +98,205 @@ export default async function PublicHomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 antialiased">
-      {/* Modern sticky navbar with clean glassmorphism */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur-md transition-all">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" aria-label="Pig Project Rwanda home" className="flex shrink-0 items-center">
-            <img src="/pig-project-rwanda-logo.svg" alt="Pig Project Rwanda Logo" className="h-10 w-auto" />
-          </Link>
+    <div className="bg-white text-slate-900 antialiased">
+      {/* ── Full-screen hero wrapper ───────────────────────────── */}
+      <div
+        id="hero-screen"
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100vh",
+          height: "100dvh",
+          overflow: "hidden",
+          margin: 0,
+          padding: 0,
+        }}
+      >
+        {/* Background image — full cover */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${heroData.imageUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center center",
+            backgroundRepeat: "no-repeat",
+            zIndex: 0,
+          }}
+        />
 
-          <nav className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-slate-50/80 px-2 py-1 text-sm font-medium text-slate-600 md:flex">
-            <Link href="#about" className="rounded-full px-3.5 py-1.5 hover:text-slate-900 hover:bg-white transition-colors">
-              About
-            </Link>
-            <Link href="#how-it-works" className="rounded-full px-3.5 py-1.5 hover:text-slate-900 hover:bg-white transition-colors">
-              How It Works
-            </Link>
-            <Link href="#impact" className="rounded-full px-3.5 py-1.5 hover:text-slate-900 hover:bg-white transition-colors">
-              Impact
-            </Link>
-            <Link href="/gallery" className="rounded-full px-3.5 py-1.5 hover:text-slate-900 hover:bg-white transition-colors">
-              Gallery
-            </Link>
-            <Link href="/team" className="rounded-full px-3.5 py-1.5 hover:text-slate-900 hover:bg-white transition-colors">
-              Our Team
-            </Link>
-            <Link href="#stories" className="rounded-full px-3.5 py-1.5 hover:text-slate-900 hover:bg-white transition-colors">
-              Stories
-            </Link>
-          </nav>
+        {/* Dark overlay for readability */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(160deg, rgba(6,78,59,0.72) 0%, rgba(2,26,20,0.80) 100%)",
+            zIndex: 1,
+          }}
+        />
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 transition-colors hidden sm:inline-block"
-            >
-              Staff Login
+        {/* ── Sticky navbar — floats above the hero image ── */}
+        <header
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            borderBottom: "1px solid rgba(255,255,255,0.10)",
+            background: "rgba(6,78,59,0.25)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+          }}
+        >
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+            <Link href="/" aria-label="Pig Project Rwanda home" className="flex shrink-0 items-center">
+              <img src="/pig-project-rwanda-logo.svg" alt="Pig Project Rwanda Logo" className="h-10 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
             </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[#053d2e] transition-colors"
-            >
-              <span>Contact Us</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+
+            <nav className="hidden items-center gap-0.5 md:flex">
+              {[
+                { href: "#about", label: "About" },
+                { href: "#how-it-works", label: "How It Works" },
+                { href: "#impact", label: "Impact" },
+                { href: "/gallery", label: "Gallery" },
+                { href: "/team", label: "Our Team" },
+                { href: "#stories", label: "Stories" },
+              ].map(({ href, label }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="rounded-full px-3.5 py-1.5 text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className="hidden sm:inline-block text-sm font-medium text-white/80 hover:text-white px-3 py-1.5 transition-colors"
+              >
+                Staff Login
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#064e3b] shadow-sm hover:bg-emerald-50 transition-colors"
+              >
+                <span>Contact Us</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* ── Hero content — centered in viewport ── */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 10,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-400/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-emerald-200 backdrop-blur-sm mb-8">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Pig Project Rwanda &bull; Revolving Fund
+            </div>
+
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.10]">
+              {heroData.title}
+            </h1>
+
+            <p className="mt-6 max-w-2xl mx-auto text-lg leading-relaxed text-emerald-100/85 sm:text-xl">
+              {heroData.description}
+            </p>
+
+            {/* CTA buttons */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href={heroData.primaryButtonLink}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#064e3b] shadow-md hover:bg-emerald-50 transition-all"
+              >
+                <span>{heroData.primaryButtonText}</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href={heroData.secondaryButtonLink}
+                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm hover:bg-white/20 transition-all"
+              >
+                {heroData.secondaryButtonText}
+              </Link>
+            </div>
+
+            {/* Trust pills */}
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-emerald-200/70 uppercase tracking-widest">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Community-Led
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Rwanda Operations
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Revolving Mandate
+              </span>
+            </div>
           </div>
         </div>
-      </header>
+
+        {/* ── Floating stat chip — bottom of screen ── */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "2rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 20,
+            display: "flex",
+            gap: "1rem",
+          }}
+        >
+          {[
+            { value: totalBeneficiaries, label: "Families Supported" },
+            { value: totalPigsDistributed, label: "Pigs Distributed" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                background: "rgba(255,255,255,0.12)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.20)",
+                borderRadius: "0.875rem",
+                padding: "0.875rem 1.5rem",
+                textAlign: "center",
+                minWidth: "110px",
+              }}
+            >
+              <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff", lineHeight: 1 }}>
+                {stat.value}
+              </p>
+              <p style={{ marginTop: "0.25rem", fontSize: "0.65rem", fontWeight: 600, color: "rgba(167,243,208,0.85)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* ── End full-screen hero ──────────────────────────────── */}
 
       <main>
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-slate-50/80 via-white to-white border-b border-slate-100">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:py-24 lg:px-8">
-            <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-semibold tracking-wide text-emerald-800">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                Pig Project Rwanda &bull; Revolving Fund
-              </div>
-
-              <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.12]">
-                {heroData.title}
-              </h1>
-
-              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600 sm:text-xl">
-                {heroData.description}
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link
-                  href={heroData.primaryButtonLink}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#064e3b] px-6 py-3 text-sm font-semibold text-white shadow-xs hover:bg-[#053d2e] transition-all"
-                >
-                  <span>{heroData.primaryButtonText}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href={heroData.secondaryButtonLink}
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-all"
-                >
-                  {heroData.secondaryButtonText}
-                </Link>
-              </div>
-
-              <div className="mt-10 flex items-center gap-6 border-t border-slate-100 pt-6 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Community-Led
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Rwanda Operations
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Revolving Mandate
-                </span>
-              </div>
-            </div>
-
-            <div className="relative lg:col-span-5">
-              <div className="relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs">
-                <div className="aspect-[4/3] overflow-hidden rounded-xl bg-slate-100">
-                  <img
-                    src={heroData.imageUrl}
-                    alt={heroData.imageAlt}
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-              </div>
-
-              {/* Floating Stat Chip */}
-              <div className="absolute -bottom-5 left-6 rounded-xl border border-slate-200/90 bg-white/95 backdrop-blur-sm px-5 py-3.5 shadow-md">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                  Families Empowered
-                </p>
-                <p className="mt-0.5 text-2xl font-bold text-[#064e3b]">{totalBeneficiaries}</p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* About the fund */}
         <section id="about" className="px-4 py-20 sm:px-6 lg:px-8">
