@@ -55,8 +55,8 @@ export function BeneficiariesClient({
       </div>
 
       <div className="bg-white shadow-sm rounded-xl border border-[#d9e1d8] overflow-hidden">
-        <div className="p-4 border-b border-[#d9e1d8] flex gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex border-b border-[#d9e1d8] p-4">
+          <div className="relative w-full max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-[#9db0a4]" />
             </div>
@@ -72,7 +72,7 @@ export function BeneficiariesClient({
 
         {filteredBeneficiaries.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[#d9e1d8]">
+            <table className="min-w-[760px] divide-y divide-[#d9e1d8]">
               <thead className="bg-[#f2f5f0]">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-[#5d6e64] uppercase tracking-wider">Beneficiary</th>
@@ -119,7 +119,7 @@ export function BeneficiariesClient({
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center">
+          <div className="p-6 text-center sm:p-12">
             <Users className="mx-auto h-12 w-12 text-[#9db0a4] mb-4" />
             <h3 className="text-lg font-medium text-[#1c2b23] mb-1">No beneficiaries match your search</h3>
             <p className="text-[#5d6e64]">Try another name, ID, or district.</p>

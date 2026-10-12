@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "frontend/**",
+    "Backend/**",
+    "fix-links.js",
+    "tmp-responsive-check.mjs",
   ]),
 ]);
 

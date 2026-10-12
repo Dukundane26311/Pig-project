@@ -15,7 +15,8 @@ export default async function DashboardRedirect() {
     redirect("/login");
   }
 
-  const role = normalizeRole((session.user as any).role);
+  const user = session.user as { role?: string };
+  const role = normalizeRole(user.role);
 
   switch (role) {
     case "SUPER_ADMIN":

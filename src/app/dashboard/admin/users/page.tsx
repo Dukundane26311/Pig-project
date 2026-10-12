@@ -2,8 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, ShieldCheck, UserCircle2 } from "lucide-react";
+import { Plus, ShieldCheck, UserCircle2, History } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { DeleteUserButton } from "./DeleteUserButton";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export default async function UsersManagementPage() {
   }
 
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -53,12 +55,13 @@ export default async function UsersManagementPage() {
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Created</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#edf2ee]">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-[#5d6e64]">
+                  <td colSpan={6} className="px-4 py-8 text-center text-[#5d6e64]">
                     No users found yet.
                   </td>
                 </tr>
@@ -87,6 +90,23 @@ export default async function UsersManagementPage() {
                     </td>
                     <td className="px-4 py-3 text-[#5d6e64]">
                       {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/dashboard/history?userId=${user.id}`}
+                          className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold text-[#2c5a43] hover:bg-[#e4ede6] hover:text-[#1c2b23] border border-[#cfe0d4] transition"
+                          title={`View activity history for ${user.name}`}
+                        >
+                          <History className="h-3.5 w-3.5" />
+                          <span>History</span>
+                        </Link>
+                        <DeleteUserButton
+                          userId={user.id}
+                          userName={user.name}
+                          isCurrentUser={user.id === session.user.id}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))

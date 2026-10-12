@@ -1,196 +1,79 @@
-# 🐷 Pig Project Revolving Fund
+# Pig Project Revolving Fund
 
 **Value Protocols Rwanda**
 
 > *"One Piglet. One Family. A Fund That Keeps Moving."*
 
----
-
 ## Overview
 
-The **Pig Project Revolving Fund** is a full-stack management platform for Value Protocols Rwanda — an NGO running a pig revolving fund program.
+The Pig Project Revolving Fund is a management platform for livestock distribution, veterinary care, beneficiary follow-up, finance, and the revolving fund.
 
-**Core Model:**
-A vulnerable family receives a pig → the pig reproduces → the family returns 3 piglets → those piglets are redistributed to the next family → the cycle continues.
-
----
+New distributions create a return cycle for **two piglets**. Each cycle stores its own expected return, so historical obligations remain as recorded instead of being silently rewritten. A pig must be registered, cleared as healthy by a veterinary officer, and selected from available inventory before it can be distributed.
 
 ## Architecture
 
-```
-User Browser
-    │
-    ▼
-Next.js Frontend (Netlify)
-    │ HTTPS REST API
-    ▼
-FastAPI Backend (Render / Railway / Fly.io)
-    │
-    ▼
-PostgreSQL Database (Managed)
-```
-
----
+- Next.js 16, React 19, and TypeScript web application and API routes.
+- Prisma ORM with PostgreSQL for application data.
+- A separate Spring Boot application is present in `Backend/`; it is not required to run the root Next.js application.
 
 ## Project Structure
 
-```
-pig-project/
-├── frontend/          # Next.js + TypeScript + Tailwind
-├── backend/           # Python FastAPI + SQLAlchemy + Alembic
-├── docker-compose.yml # Local development
-└── README.md
+```text
+src/app/       Next.js pages, API routes, and server actions
+src/components Shared UI components
+src/lib/        Authentication, database, and application helpers
+prisma/         Prisma schema
+Backend/        Separate Spring Boot application
 ```
 
----
-
-## Quick Start (Local Development)
+## Run the Next.js Application
 
 ### Prerequisites
-- Node.js 18+
-- Python 3.12+
-- PostgreSQL 16+ (or Docker)
 
-### 1. Clone & Start Database
+- Node.js 20.9 or later.
+- PostgreSQL available to the application.
 
-```bash
-# With Docker (recommended):
-docker-compose up db -d
+### Setup
 
-# Or use your local PostgreSQL instance
+1. Install dependencies:
+
+   ```powershell
+   npm install
+   ```
+
+2. Create `.env` from `.env.example` and configure `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL`. Use a unique, securely generated `NEXTAUTH_SECRET`; do not reuse development values in production.
+
+3. Generate the Prisma client and start the app:
+
+   ```powershell
+   npx prisma generate
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000).
+
+The Prisma schema is in `prisma/schema.prisma`. This repository currently has no Prisma migration history. Before applying schema changes to an existing database, take a backup and use the project's approved database-change process; do not assume that `db push` is safe for existing data.
+
+## Validation and Production
+
+```powershell
+npm run lint
+npx tsc --noEmit
+npm run build
+npm run start
 ```
 
-### 2. Backend
+The production server requires the same database and authentication environment variables as development. Do not expose the database or commit `.env`.
 
-```bash
-cd backend
+## Spring Boot Application
 
-# Create virtual environment
-python -m venv .venv
+`Backend/` contains a separate Spring Boot application. It has its own Maven wrapper and configuration; the Next.js app can be run independently. Review `Backend/HELP.md` and the backend configuration before starting it.
 
-# Activate (Windows PowerShell)
-.venv\Scripts\Activate.ps1
+## Security Notes
 
-# Activate (macOS/Linux)
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy and configure environment
-cp .env.example .env
-# Edit .env with your values
-
-# Run database migrations
-alembic upgrade head
-
-# Seed initial data
-python -m app.db.seed
-
-# Start development server
-uvicorn app.main:app --reload --port 8000
-```
-
-Backend API: http://localhost:8000  
-API Docs: http://localhost:8000/docs  
-ReDoc: http://localhost:8000/redoc
-
-### 3. Frontend
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Copy and configure environment
-cp .env.example .env.local
-# Set NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-
-# Start development server
-npm run dev
-```
-
-Frontend: http://localhost:3000
-
----
-
-## Default Credentials (Development)
-
-> ⚠️ Change immediately in production!
-
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | admin@valueprotocols.rw | admin123 |
-
-The backend seeds this account automatically on first run. Use these values when signing in at http://localhost:3000/login.
-
----
-
-## Running Tests
-
-```bash
-cd backend
-pytest tests/ -v
-```
-
----
-
-## Production Deployment
-
-### Backend (Render / Railway / Fly.io)
-
-1. Push to GitHub
-2. Connect repository to your hosting provider
-3. Set environment variables (see `backend/.env.example`)
-4. Set start command: `gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT`
-5. Run migrations on deploy: `alembic upgrade head`
-
-### Frontend (Netlify)
-
-1. Connect GitHub repository
-2. Build command: `npm run build`
-3. Publish directory: `.next`
-4. Set `NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1`
-
-### Database
-
-Use managed PostgreSQL:
-- [Neon](https://neon.tech) — Free tier available
-- [Supabase](https://supabase.com)
-- [Railway](https://railway.app)
-- [Amazon RDS](https://aws.amazon.com/rds/)
-
----
-
-## Environment Variables
-
-See:
-- `backend/.env.example`
-- `frontend/.env.example`
-
----
-
-## API Documentation
-
-- Swagger UI: `https://api.yourdomain.com/docs`
-- ReDoc: `https://api.yourdomain.com/redoc`
-
----
-
-## Security
-
-- JWT authentication (access + refresh tokens)
-- Argon2 password hashing
-- Role-Based Access Control (RBAC)
-- OTP for sensitive operations
-- Audit logging
-- Rate limiting
-- CORS restrictions
-- SQL injection protection via SQLAlchemy ORM
-- No secrets in repository
-
----
+- Server-side actions and protected APIs must enforce authorization; hiding a page or navigation link is not an authorization boundary.
+- Use active database-backed accounts and role-appropriate access.
+- Do not store production credentials in source control or share account passwords in documentation.
 
 ## License
 

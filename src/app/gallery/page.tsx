@@ -2,11 +2,12 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import GalleryCollection from "@/components/public/gallery-collection";
+import type { GalleryItem } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
 export default async function GalleryPage() {
-  let items: any[] = [];
+  let items: GalleryItem[] = [];
   try {
     items = await prisma.galleryItem.findMany({
       where: { isPublished: true },
@@ -23,6 +24,7 @@ export default async function GalleryPage() {
       <header className="border-b border-[#d9e1d8] bg-white sticky top-0 z-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" aria-label="Pig Project Rwanda home" className="flex items-center shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/pig-project-rwanda-logo.svg" alt="Pig Project Rwanda Logo" className="h-11 w-auto" />
           </Link>
           <div className="flex items-center gap-4 text-sm text-[#5d6e64]">
@@ -61,7 +63,7 @@ export default async function GalleryPage() {
         )}
 
         <div className="mt-12 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 rounded-lg bg-[#c9577a] px-6 py-3 font-medium text-white hover:bg-[#a63a3a]">
+          <Link href="/" className="inline-flex items-center gap-2 rounded-lg bg-[#2c5a43] px-6 py-3 font-medium text-white hover:bg-[#1c2b23]">
             Back to Home
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -73,6 +75,7 @@ export default async function GalleryPage() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <div>
               <Link href="/" aria-label="Pig Project Rwanda home" className="inline-flex items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/pig-project-rwanda-logo.svg" alt="Pig Project Rwanda Logo" className="h-12 w-auto" />
               </Link>
               <p className="mt-3 text-2xl font-serif text-[#1c2b23]">One Piglet. One Family. A Fund That Keeps Moving.</p>

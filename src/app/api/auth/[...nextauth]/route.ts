@@ -1,13 +1,35 @@
-// @ts-nocheck
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { randomUUID } from "crypto";
+import { Role } from "@prisma/client";
 
-const normalizeRole = (role?: string | null) => {
+const validRoles = [
+  Role.SUPER_ADMIN,
+  Role.FIELD_OFFICER,
+  Role.VETERINARIAN,
+  Role.PROJECT_MANAGER,
+  Role.FINANCE_OFFICER,
+  Role.TRAINER,
+  Role.FUNDER,
+];
+
+const normalizeRole = (role?: string | null): Role | "" => {
   if (!role) return "";
   const cleanRole = role.replace(/^ROLE_/, "");
-  return cleanRole === "ADMIN" ? "SUPER_ADMIN" : cleanRole;
+  if (cleanRole === "ADMIN") return Role.SUPER_ADMIN;
+  return validRoles.includes(cleanRole as Role) ? (cleanRole as Role) : "";
+};
+
+type BackendLoginResponse = {
+  success?: boolean;
+  data?: {
+    email?: string;
+    name?: string;
+    role?: string;
+    token?: string;
+  };
 };
 
 export const authOptions: NextAuthOptions = {
@@ -19,31 +41,55 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const log = (msg: string) => {
-          try {
-            const fs = require('fs');
-            fs.appendFileSync('nextauth-debug.log', new Date().toISOString() + ': ' + msg + '\n');
-          } catch (_) {}
-          console.log(msg);
-        };
-        
         const cleanEmail = String(credentials?.email || "").trim().toLowerCase();
-        const cleanPassword = String(credentials?.password || "").trim();
+        const cleanPassword = String(credentials?.password || "");
 
-        log("LOGIN ATTEMPT WITH: " + cleanEmail);
         if (!cleanEmail || !cleanPassword) {
-          log("No credentials provided");
-          throw new Error("Invalid credentials");
+          return null;
         }
 
+        const localUser = await prisma.user.findUnique({
+          where: { email: cleanEmail },
+        });
+
+        if (localUser) {
+          if (!localUser.isActive || localUser.deletedAt) {
+            return null;
+          }
+
+          const passwordMatches = await bcrypt.compare(
+            cleanPassword,
+            localUser.password,
+          );
+          const legacyPasswordMatches =
+            !passwordMatches && cleanPassword !== cleanPassword.trim()
+              ? await bcrypt.compare(cleanPassword.trim(), localUser.password)
+              : false;
+
+          if (passwordMatches || legacyPasswordMatches) {
+            return {
+              id: localUser.id,
+              email: localUser.email,
+              name: localUser.name,
+              role: localUser.role,
+              accessLevel: localUser.accessLevel,
+              assignedDistrictId: localUser.assignedDistrictId,
+              assignedSectorId: localUser.assignedSectorId,
+              assignedCellId: localUser.assignedCellId,
+              assignedVillageId: localUser.assignedVillageId,
+            };
+          }
+        }
+
+        const backendUrl =
+          process.env.BACKEND_URL ||
+          (process.env.NODE_ENV === "production"
+            ? "https://pig-project-backend.onrender.com"
+            : "http://127.0.0.1:8081");
+        let res: Response;
+
         try {
-          const backendUrl =
-            process.env.BACKEND_URL ||
-            (process.env.NODE_ENV === "production"
-              ? "https://pig-project-backend.onrender.com"
-              : "http://127.0.0.1:8081");
-          log("Fetching from spring boot at " + backendUrl + "...");
-          const res = await fetch(`${backendUrl}/api/auth/login`, {
+          res = await fetch(`${backendUrl}/api/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -53,55 +99,56 @@ export const authOptions: NextAuthOptions = {
               password: cleanPassword,
             }),
           });
+        } catch {
+          console.error("Authentication backend request failed.");
+          throw new Error("The authentication service is unavailable.");
+        }
 
-          log("Response status: " + res.status);
-          const data = await res.json();
-          log("Response data: " + JSON.stringify(data));
-
-          if (res.ok && data.success && data.data) {
-            const user = data.data;
-            const email = String(user.email || cleanEmail).trim().toLowerCase();
-            log("Backend login successful for user: " + email);
-
-            let mappedUser = null;
-            try {
-              if (email) {
-                mappedUser = await prisma.user.upsert({
-                  where: { email },
-                  update: {
-                    name: user.name || user.email || "System User",
-                    role: normalizeRole(user.role) as any,
-                    isActive: true,
-                  },
-                  create: {
-                    name: user.name || user.email || "System User",
-                    email,
-                    password: await bcrypt.hash(`backend-user-${Date.now()}`, 10),
-                    role: (normalizeRole(user.role) || "FIELD_OFFICER") as any,
-                    isActive: true,
-                  },
-                });
-              }
-            } catch (dbErr: any) {
-              console.error("Warning: Prisma user sync failed during login:", dbErr?.message || dbErr);
-            }
-
-            return {
-              id: (mappedUser?.id ?? user.id?.toString() ?? email).toString(),
-              email: email || user.email,
-              name: mappedUser?.name || user.name || user.email || "System User",
-              role: normalizeRole(user.role),
-              token: user.token,
-            } as any;
-          } else {
-            log("Login failed on backend: " + (data?.message || "Unknown error"));
-            return null;
-          }
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : "Unknown error";
-          log("Exception during login: " + message);
+        if (res.status === 400 || res.status === 401) {
           return null;
         }
+        if (!res.ok) {
+          console.error("Authentication backend returned HTTP", res.status);
+          throw new Error("The authentication service is unavailable.");
+        }
+
+        const result = (await res.json()) as BackendLoginResponse;
+        const user = result?.data;
+        if (!result?.success || !user) {
+          return null;
+        }
+
+        const email = String(user.email || cleanEmail).trim().toLowerCase();
+        const role = normalizeRole(user.role) || Role.FIELD_OFFICER;
+        const mappedUser = await prisma.user.upsert({
+          where: { email },
+          update: {
+            name: user.name || user.email || "System User",
+            role,
+            isActive: true,
+            deletedAt: null,
+          },
+          create: {
+            name: user.name || user.email || "System User",
+            email,
+            password: await bcrypt.hash(randomUUID(), 10),
+            role,
+            isActive: true,
+          },
+        });
+
+        return {
+          id: mappedUser.id,
+          email,
+          name: mappedUser.name,
+          role,
+          accessLevel: mappedUser.accessLevel,
+          assignedDistrictId: mappedUser.assignedDistrictId,
+          assignedSectorId: mappedUser.assignedSectorId,
+          assignedCellId: mappedUser.assignedCellId,
+          assignedVillageId: mappedUser.assignedVillageId,
+          token: user.token,
+        };
       }
     })
   ],
@@ -109,16 +156,26 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = normalizeRole((user as any).role ?? (user as any).role);
-        token.accessToken = (user as any).token;
+        token.role = normalizeRole(user.role);
+        token.accessToken = user.token;
+        token.accessLevel = user.accessLevel;
+        token.assignedDistrictId = user.assignedDistrictId;
+        token.assignedSectorId = user.assignedSectorId;
+        token.assignedCellId = user.assignedCellId;
+        token.assignedVillageId = user.assignedVillageId;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = normalizeRole(String(token.role ?? ""));
-        (session as any).accessToken = token.accessToken;
+        session.user.id = token.id;
+        session.user.role = normalizeRole(String(token.role ?? ""));
+        session.accessToken = token.accessToken;
+        session.user.accessLevel = String(token.accessLevel ?? "ALL");
+        session.user.assignedDistrictId = token.assignedDistrictId ?? null;
+        session.user.assignedSectorId = token.assignedSectorId ?? null;
+        session.user.assignedCellId = token.assignedCellId ?? null;
+        session.user.assignedVillageId = token.assignedVillageId ?? null;
       }
       return session;
     }
@@ -126,9 +183,32 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
+  events: {
+    async signIn({ user }) {
+      if (user?.id) {
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId: user.id,
+              role: (user as any).role ? String((user as any).role) : null,
+              action: "LOGIN",
+              entity: "AUTH",
+              entityId: user.id,
+              newValue: {
+                email: user.email,
+                name: user.name,
+              },
+            },
+          });
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          });
+        } catch (err) {
+          console.error("Failed to record login audit log:", err);
+        }
+      }
+    },
   },
   secret: process.env.NEXTAUTH_SECRET || "your-super-secret-jwt-key-for-next-auth",
 };

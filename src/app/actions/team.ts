@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
@@ -46,17 +46,14 @@ async function saveMemberPhoto(file: File | null, existingPhotoUrl?: string | nu
   return `/uploads/team/${fileName}`;
 }
 
-function ensureAdmin() {
-  return getServerSession(authOptions).then((session) => {
-    if (!session || session.user.role !== "SUPER_ADMIN") {
-      throw new Error("Unauthorized");
-    }
-    return session;
-  });
+async function ensureAdmin() {
+  const user = await getActiveUser([Role.SUPER_ADMIN]);
+  if (!user) throw new Error("Unauthorized");
+  return user;
 }
 
 export async function createTeamMember(formData: FormData) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const fullName = toOptionalString(formData.get("fullName"));
   const role = toOptionalString(formData.get("role"));
@@ -98,7 +95,7 @@ export async function createTeamMember(formData: FormData) {
       action: "CREATED",
       entity: "TEAM_MEMBER",
       entityId: member.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { fullName: member.fullName, role: member.role },
     },
   });
@@ -110,7 +107,7 @@ export async function createTeamMember(formData: FormData) {
 }
 
 export async function updateTeamMember(id: string, formData: FormData) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const existing = await prisma.teamMember.findUnique({ where: { id } });
   if (!existing) {
@@ -158,7 +155,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
       action: "UPDATED",
       entity: "TEAM_MEMBER",
       entityId: member.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { fullName: member.fullName, role: member.role },
     },
   });
@@ -170,7 +167,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
 }
 
 export async function deleteTeamMember(id: string) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const member = await prisma.teamMember.findUnique({ where: { id } });
   if (!member) {
@@ -191,7 +188,7 @@ export async function deleteTeamMember(id: string) {
       action: "DELETED",
       entity: "TEAM_MEMBER",
       entityId: id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { fullName: member.fullName, deleted: true },
     },
   });
@@ -203,7 +200,7 @@ export async function deleteTeamMember(id: string) {
 }
 
 export async function toggleTeamMemberPublished(id: string) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const member = await prisma.teamMember.findUnique({ where: { id } });
   if (!member) {
@@ -220,7 +217,7 @@ export async function toggleTeamMemberPublished(id: string) {
       action: updated.isPublished ? "PUBLISHED" : "UNPUBLISHED",
       entity: "TEAM_MEMBER",
       entityId: member.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { fullName: member.fullName, isPublished: updated.isPublished },
     },
   });
@@ -231,7 +228,7 @@ export async function toggleTeamMemberPublished(id: string) {
 }
 
 export async function toggleTeamMemberFeatured(id: string) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const member = await prisma.teamMember.findUnique({ where: { id } });
   if (!member) {
@@ -248,7 +245,7 @@ export async function toggleTeamMemberFeatured(id: string) {
       action: updated.isFeatured ? "FEATURED" : "UNFEATURED",
       entity: "TEAM_MEMBER",
       entityId: member.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { fullName: member.fullName, isFeatured: updated.isFeatured },
     },
   });

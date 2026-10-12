@@ -28,7 +28,7 @@ export default async function NewUserPage({
           <ArrowLeft className="h-6 w-6" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold font-serif text-[#1c2b23]">Create New User</h1>
+          <h1 className="text-2xl font-bold font-serif text-[#1c2b23]">Register User</h1>
           <p className="mt-1 text-sm text-[#5d6e64]">Add a new Field Officer, Veterinarian, or Admin to the system.</p>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default async function NewUserPage({
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-[#1c2b23] mb-1">System Role *</label>
               <select
                 name="role"
@@ -114,7 +114,7 @@ export default async function NewUserPage({
               className="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#2c5a43] hover:bg-[#1c2b23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2c5a43]"
             >
               <Save className="h-4 w-4 mr-2" />
-              Create User
+              Save Information
             </button>
           </div>
         </form>

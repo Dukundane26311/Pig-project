@@ -30,11 +30,16 @@ export default function NewBeneficiaryPage() {
                   className="mt-1 block w-full border border-[#d9e1d8] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm text-[#1c2b23] bg-white" />
               </div>
               <div>
+                <label htmlFor="nationalId" className="block text-sm font-medium text-[#5d6e64]">National ID (Irangamuntu)</label>
+                <input type="text" name="nationalId" id="nationalId" placeholder="16 digits"
+                  className="mt-1 block w-full border border-[#d9e1d8] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm text-[#1c2b23] bg-white" />
+              </div>
+              <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-[#5d6e64]">Phone Number</label>
                 <input type="text" name="phone" id="phone"
                   className="mt-1 block w-full border border-[#d9e1d8] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm text-[#1c2b23] bg-white" />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label htmlFor="savingsGroup" className="block text-sm font-medium text-[#5d6e64]">Savings Group (1-10)</label>
                 <input type="text" name="savingsGroup" id="savingsGroup"
                   className="mt-1 block w-full border border-[#d9e1d8] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm text-[#1c2b23] bg-white" />

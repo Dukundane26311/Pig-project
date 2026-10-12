@@ -3,10 +3,11 @@
 import { saveHeroSection } from "@/app/actions/website-content";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import type { WebsiteContent } from "@prisma/client";
 
 const fallbackImage = "/pig-hero-real.jpg";
 
-export default function HeroEditor({ initialContent }: { initialContent?: any }) {
+export default function HeroEditor({ initialContent }: { initialContent?: WebsiteContent | null }) {
   const searchParams = useSearchParams();
   const success = searchParams.get("success") === "1";
 

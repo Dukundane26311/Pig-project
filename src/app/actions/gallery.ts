@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
@@ -45,15 +45,15 @@ const saveGalleryImage = async (file: File | null, existingImageUrl?: string | n
 };
 
 const ensureAdmin = async () => {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "SUPER_ADMIN") {
+  const user = await getActiveUser([Role.SUPER_ADMIN]);
+  if (!user) {
     throw new Error("Unauthorized");
   }
-  return session;
+  return user;
 };
 
 export async function createGalleryItem(formData: FormData) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -91,7 +91,7 @@ export async function createGalleryItem(formData: FormData) {
       action: "CREATED",
       entity: "GALLERY_ITEM",
       entityId: item.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { title: item.title, imageUrl: item.imageUrl, category: item.category },
     },
   });
@@ -103,7 +103,7 @@ export async function createGalleryItem(formData: FormData) {
 }
 
 export async function updateGalleryItem(id: string, formData: FormData) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
   const existing = await prisma.galleryItem.findUnique({ where: { id } });
   if (!existing) throw new Error("Gallery item not found.");
 
@@ -143,7 +143,7 @@ export async function updateGalleryItem(id: string, formData: FormData) {
       action: "UPDATED",
       entity: "GALLERY_ITEM",
       entityId: updated.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { title: updated.title, imageUrl: updated.imageUrl, category: updated.category },
     },
   });
@@ -155,7 +155,7 @@ export async function updateGalleryItem(id: string, formData: FormData) {
 }
 
 export async function deleteGalleryItem(id: string) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
   const item = await prisma.galleryItem.findUnique({ where: { id } });
   if (!item) throw new Error("Gallery item not found.");
 
@@ -172,7 +172,7 @@ export async function deleteGalleryItem(id: string) {
       action: "DELETED",
       entity: "GALLERY_ITEM",
       entityId: id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { title: item.title, deleted: true },
     },
   });
@@ -184,7 +184,7 @@ export async function deleteGalleryItem(id: string) {
 }
 
 export async function toggleGalleryItemPublished(id: string) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
   const item = await prisma.galleryItem.findUnique({ where: { id } });
   if (!item) throw new Error("Gallery item not found.");
 
@@ -198,7 +198,7 @@ export async function toggleGalleryItemPublished(id: string) {
       action: updated.isPublished ? "PUBLISHED" : "UNPUBLISHED",
       entity: "GALLERY_ITEM",
       entityId: item.id,
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: { title: item.title, isPublished: updated.isPublished },
     },
   });

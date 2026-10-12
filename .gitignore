@@ -17,11 +17,12 @@ develop-eggs/
 dist/
 downloads/
 eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
+# Python virtualenv / libs
+/lib/
+/lib64/
+!src/lib/
+!src/lib/**
+
 var/
 wheels/
 pip-wheel-metadata/
@@ -56,11 +57,13 @@ yarn-error.log*
 *.swp
 *.swo
 .DS_Store
-Thumbs.db
-
-# ─── Docker ────────────────────────────────────────────────────────────────────
+# ─── Logs & Temp ─────────────────────────────────────────────────────────────
 *.log
+scratch/
+*.tsbuildinfo
+nextauth-debug.log
 
 # ─── Uploads / Storage ─────────────────────────────────────────────────────────
 uploads/
 media/
+

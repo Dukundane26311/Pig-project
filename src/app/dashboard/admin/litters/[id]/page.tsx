@@ -1,32 +1,51 @@
-// @ts-nocheck
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Baby, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { markPigletReturned } from "@/app/actions/piglet";
-
+import { getActiveUser } from "@/lib/active-user";
 
 export const dynamic = 'force-dynamic';
 
 export default async function LitterDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!(await getActiveUser([Role.SUPER_ADMIN]))) redirect("/dashboard");
+
   const { id } = await params;
   const litter = await prisma.litter.findUnique({
     where: { id },
     include: {
-      pig: { include: { currentBeneficiary: true } },
-      legacyReturns: { orderBy: { pigletId: 'asc' } }
+      motherPig: { include: { currentBeneficiary: true } },
+      piglets: { orderBy: { tagNumber: "asc" } },
     }
   });
 
   if (!litter) notFound();
 
-  const returnedPiglets = litter.piglets.filter(p => p.status === 'AVAILABLE_FOR_REDISTRIBUTION' || p.status === 'REDISTRIBUTED').length;
+  const beneficiaryId = litter.motherPig.currentBeneficiaryId;
+  const [cycles, distributionCount, recordedReturns, returnedPigletCount] = beneficiaryId
+    ? await Promise.all([
+        prisma.revolvingCycle.findMany({
+          where: { beneficiaryId, status: { not: "CANCELLED" } },
+          select: { expectedReturn: true },
+        }),
+        prisma.pigDistribution.count({ where: { beneficiaryId } }),
+        prisma.pigReturn.aggregate({ _sum: { quantity: true }, where: { beneficiaryId } }),
+        prisma.piglet.count({ where: { returnedFromId: beneficiaryId } }),
+      ])
+    : [[], 0, { _sum: { quantity: null } }, 0];
+  const expectedReturns = Math.max(
+    cycles.reduce((total, cycle) => total + cycle.expectedReturn, 0),
+    distributionCount * 2,
+  );
+  const returnedPiglets = (recordedReturns._sum.quantity ?? 0) + returnedPigletCount;
+  const outstandingReturns = Math.max(0, expectedReturns - returnedPiglets);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-8">
         <Link 
-          href={`/dashboard/pigs/${litter.pigId}`}
+          href={`/dashboard/admin/pigs/${litter.motherPigId}`}
           className="p-2 text-[#5d6e64] hover:bg-[#e4ede6] rounded-full transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -34,7 +53,7 @@ export default async function LitterDetailPage({ params }: { params: Promise<{ i
         <div>
           <h2 className="text-2xl font-bold font-serif text-[#1c2b23]">Litter Management</h2>
           <p className="mt-1 text-sm text-[#5d6e64]">
-            Mother: {litter.pig.tagNumber} ΓÇó Born: {new Date(litter.dateOfBirth).toLocaleDateString()}
+            Mother: {litter.motherPig.tagNumber} &middot; Born: {new Date(litter.actualBirthDate).toLocaleDateString()}
           </p>
         </div>
       </div>
@@ -44,12 +63,12 @@ export default async function LitterDetailPage({ params }: { params: Promise<{ i
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-semibold text-[#1c2b23] flex items-center gap-2">
             <RefreshCw className="h-5 w-5 text-[#2c5a43]" />
-            Repayment Progress (3 Required)
+            Piglet Return Progress
           </h3>
-          <span className="font-bold text-[#c9577a]">{returnedPiglets} / 3 Repaid</span>
+          <span className="font-bold text-[#c9577a]">{returnedPiglets} / {expectedReturns} Returned</span>
         </div>
         <div className="w-full bg-[#f2f5f0] rounded-full h-2.5">
-          <div className="bg-[#2c5a43] h-2.5 rounded-full" style={{ width: `${Math.min(100, (returnedPiglets / 3) * 100)}%` }}></div>
+          <div className="bg-[#2c5a43] h-2.5 rounded-full" style={{ width: `${expectedReturns ? Math.min(100, (returnedPiglets / expectedReturns) * 100) : 0}%` }}></div>
         </div>
       </div>
 
@@ -71,29 +90,33 @@ export default async function LitterDetailPage({ params }: { params: Promise<{ i
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-[#d9e1d8]">
-              {litter.piglets.map(piglet => (
+              {litter.piglets.map((piglet) => (
                 <tr key={piglet.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-[#1c2b23]">{piglet.pigletId}</td>
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-[#1c2b23]">{piglet.tagNumber ?? "Unnumbered"}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       piglet.status === 'WITH_MOTHER' ? 'bg-[#f2f5f0] text-[#5d6e64]' :
-                      piglet.status === 'AVAILABLE_FOR_REDISTRIBUTION' ? 'bg-[#c9577a]/10 text-[#c9577a]' :
+                      piglet.status === 'RETURNED' ? 'bg-[#c9577a]/10 text-[#c9577a]' :
                       'bg-[#e4ede6] text-[#2c5a43]'
                     }`}>
                       {piglet.status.replace(/_/g, ' ')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    {piglet.status === 'WITH_MOTHER' ? (
+                    {piglet.status === 'WITH_MOTHER' && outstandingReturns > 0 && beneficiaryId ? (
                       <form action={markPigletReturned}>
                         <input type="hidden" name="pigletId" value={piglet.id} />
-                        <input type="hidden" name="beneficiaryId" value={litter.pig.currentBeneficiaryId || ''} />
+                        <input type="hidden" name="beneficiaryId" value={beneficiaryId} />
                         <button type="submit" className="text-sm text-[#2c5a43] hover:underline font-medium">
-                          Mark as Repaid to Fund
+                          Record Returned Piglet
                         </button>
                       </form>
+                    ) : piglet.status === 'WITH_MOTHER' && !beneficiaryId ? (
+                      <span className="text-sm text-[#9db0a4]">No active beneficiary</span>
+                    ) : piglet.status === 'WITH_MOTHER' ? (
+                      <span className="text-sm text-[#9db0a4]">No outstanding returns</span>
                     ) : (
-                      <span className="text-sm text-[#9db0a4]">Repaid Γ£ô</span>
+                      <span className="text-sm text-[#9db0a4]">Recorded</span>
                     )}
                   </td>
                 </tr>

@@ -21,7 +21,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem("pp_pref_theme") || "light";
+                var size = localStorage.getItem("pp_pref_text_size") || "default";
+                document.documentElement.setAttribute("data-theme", theme);
+                document.documentElement.setAttribute("data-text-size", size);
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className="font-sans antialiased bg-gray-50 text-gray-900">
         <AuthProvider>{children}</AuthProvider>
       </body>

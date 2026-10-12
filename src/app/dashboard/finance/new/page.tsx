@@ -1,24 +1,22 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, TrendingDown, TrendingUp } from "lucide-react";
 import { createFinanceTransaction } from "@/app/actions/finance";
+import { getFinanceUser } from "@/lib/finance-access";
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewFinanceTransactionPage({
   searchParams,
 }: {
-  searchParams: { type?: string };
+  searchParams: Promise<{ type?: string }>;
 }) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || (session.user.role !== 'FINANCE_OFFICER' && session.user.role !== 'SUPER_ADMIN')) {
+  if (!(await getFinanceUser())) {
     redirect("/dashboard");
   }
 
-  const isIncome = searchParams.type === 'INCOME';
+  const params = await searchParams;
+  const isIncome = params.type === 'INCOME';
   const today = new Date().toISOString().split('T')[0];
 
   return (
@@ -83,18 +81,19 @@ export default async function NewFinanceTransactionPage({
                     <option value="Donor funding">Donor funding</option>
                     <option value="Pig sales">Pig sales</option>
                     <option value="Contributions">Contributions</option>
+                    <option value="Government Grant">Government Grant</option>
                     <option value="Other income">Other income</option>
                   </>
                 ) : (
                   <>
-                    <option value="Pig purchase">Pig purchase</option>
-                    <option value="Veterinary">Veterinary</option>
-                    <option value="Transport">Transport</option>
+                    <option value="Pig Purchase">Pig Purchase</option>
+                    <option value="Transportation">Transportation</option>
+                    <option value="Veterinary Treatment">Veterinary Treatment</option>
+                    <option value="Medication">Medication</option>
                     <option value="Feed">Feed</option>
                     <option value="Training">Training</option>
-                    <option value="Salaries">Salaries</option>
-                    <option value="Insurance">Insurance</option>
-                    <option value="Other expenses">Other expenses</option>
+                    <option value="Administration">Administration</option>
+                    <option value="Other">Other</option>
                   </>
                 )}
               </select>
@@ -109,8 +108,23 @@ export default async function NewFinanceTransactionPage({
                 <option value="Bank Transfer">Bank Transfer</option>
                 <option value="Mobile Money">Mobile Money</option>
                 <option value="Cash">Cash</option>
+                <option value="Cheque">Cheque</option>
               </select>
             </div>
+
+            {!isIncome && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-[#1c2b23] mb-1">
+                  Associated Pig or Case ID (Optional)
+                </label>
+                <input 
+                  type="text" 
+                  name="pigId" 
+                  placeholder="e.g. PF-RW-2026-00001 (Traceable livestock reference)"
+                  className="w-full rounded-md border-[#d9e1d8] shadow-sm focus:border-[#2c5a43] focus:ring-[#2c5a43] sm:text-sm p-2 border"
+                />
+              </div>
+            )}
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-[#1c2b23] mb-1">Description / Notes</label>

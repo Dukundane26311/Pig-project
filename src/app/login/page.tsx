@@ -18,30 +18,38 @@ export default function LoginPage() {
     setError("");
 
     const trimmedEmail = email.trim().toLowerCase();
-    const trimmedPassword = password.trim();
+    try {
+      const res = await signIn("credentials", {
+        email: trimmedEmail,
+        password,
+        redirect: false,
+      });
 
-    const res = await signIn("credentials", {
-      email: trimmedEmail,
-      password: trimmedPassword,
-      redirect: false,
-    });
-
-    if (res?.error) {
-      setError(
-        res.error === "CredentialsSignin"
-          ? "Invalid email or password. Please verify your credentials."
-          : res.error
-      );
+      if (res?.error) {
+        setError(
+          res.error === "CredentialsSignin"
+            ? "Invalid email or password. Please verify your credentials."
+            : "Unable to sign in right now. Please try again."
+        );
+      } else if (res?.ok) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setError("Unable to sign in right now. Please try again.");
+      }
+    } catch {
+      setError("Unable to connect to the sign-in service. Please try again.");
+    } finally {
       setLoading(false);
-    } else {
-      router.push("/dashboard");
-      router.refresh();
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f2f5f0] px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-[#d9e1d8]">
+      <div
+        className="w-full rounded-2xl border border-[#d9e1d8] bg-white shadow-xl overflow-hidden"
+        style={{ maxWidth: "min(28rem, calc(100vw - 2rem))" }}
+      >
         <div className="bg-[#2c5a43] p-8 text-center">
           <h1 className="text-2xl font-semibold text-white mb-2 font-serif tracking-tight">Pig Project</h1>
           <p className="text-[#e4ede6] text-sm">Value Protocols, Rwanda</p>
@@ -92,7 +100,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-[#d9e1d8] rounded-lg focus:ring-2 focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm bg-white text-[#1c2b23]"
-                  placeholder="••••••••"
+                  placeholder="********"
                 />
               </div>
             </div>

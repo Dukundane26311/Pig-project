@@ -1,12 +1,27 @@
-// @ts-nocheck
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, Phone, Calendar, FileText, Activity, PiggyBank, Repeat, RotateCcw } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Calendar, FileText, Activity, PiggyBank, RotateCcw, Shield, Users } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getActiveUser } from "@/lib/active-user";
 
 export const dynamic = 'force-dynamic';
 
+function maskNationalId(nid: string | null | undefined): string {
+  if (!nid) return "Not provided";
+  const trimmed = nid.trim();
+  if (trimmed.length <= 6) return "••••••";
+  return `${trimmed.substring(0, 5)}••••••${trimmed.substring(trimmed.length - 2)}`;
+}
+
 export default async function BeneficiaryDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const activeUser = await getActiveUser([Role.SUPER_ADMIN, Role.FIELD_OFFICER]);
+  if (!activeUser) {
+    redirect("/dashboard");
+  }
+
+  const isSuperAdmin = activeUser.role === Role.SUPER_ADMIN;
   const { id } = await params;
   
   const beneficiary = await prisma.beneficiary.findUnique({
@@ -15,7 +30,8 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
       pigs: true,
       legacyReturns: true,
       distributions: { include: { pig: true } },
-      legacyRepayments: true,
+      returns: { select: { quantity: true } },
+      revolvingCycles: { select: { expectedReturn: true, status: true } },
       fieldVisits: {
         orderBy: { date: 'desc' },
         take: 5
@@ -27,11 +43,15 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
     notFound();
   }
 
-  // Calculate Revolving Fund Stats
+  // Calculate Revolving Fund Stats (Standard: exactly 2 piglets per distributed pig)
   const pigsReceived = beneficiary.distributions.length;
-  const pigletsReturned = beneficiary.legacyReturns.length;
-  // Assume each pig received requires 3 piglets to be returned
-  const expectedReturn = pigsReceived * 3;
+  const pigletsReturned =
+    beneficiary.returns.reduce((total, returned) => total + returned.quantity, 0) +
+    beneficiary.legacyReturns.length;
+  const cycleExpectation = beneficiary.revolvingCycles
+    .filter((cycle) => cycle.status !== "CANCELLED")
+    .reduce((total, cycle) => total + cycle.expectedReturn, 0);
+  const expectedReturn = Math.max(cycleExpectation, pigsReceived * 2);
   const outstandingReturn = Math.max(0, expectedReturn - pigletsReturned);
 
   return (
@@ -45,7 +65,7 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
         </Link>
         <div>
           <h2 className="text-2xl font-bold font-serif text-[#1c2b23]">Beneficiary Profile</h2>
-          <p className="mt-1 text-sm text-[#5d6e64]">{beneficiary.currentBeneficiaryId}</p>
+          <p className="mt-1 text-sm text-[#5d6e64] font-mono">{beneficiary.beneficiaryNumber}</p>
         </div>
       </div>
 
@@ -69,14 +89,32 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
               
               <div className="mt-6 space-y-4">
                 <div className="flex items-center text-sm text-[#5d6e64]">
+                  <Shield className="h-4 w-4 mr-3 text-[#2c5a43]" />
+                  <div>
+                    <div className="text-xs text-[#9db0a4]">National ID</div>
+                    <span className="font-mono text-[#1c2b23]">
+                      {isSuperAdmin && beneficiary.nationalId ? beneficiary.nationalId : maskNationalId(beneficiary.nationalId)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center text-sm text-[#5d6e64]">
                   <Phone className="h-4 w-4 mr-3 text-[#9db0a4]" />
                   {beneficiary.phone || 'No phone provided'}
                 </div>
+                {beneficiary.householdSize && (
+                  <div className="flex items-center text-sm text-[#5d6e64]">
+                    <Users className="h-4 w-4 mr-3 text-[#9db0a4]" />
+                    Household: {beneficiary.householdSize} members
+                  </div>
+                )}
                 <div className="flex items-center text-sm text-[#5d6e64]">
                   <MapPin className="h-4 w-4 mr-3 text-[#9db0a4]" />
-                  {beneficiary.district}, {beneficiary.sector}
-                  <br />
-                  {beneficiary.cell}, {beneficiary.village}
+                  <div>
+                    <div>{beneficiary.districtStr || 'Rwanda'}</div>
+                    <div className="text-xs text-[#9db0a4]">
+                      {[beneficiary.sectorStr, beneficiary.cellStr, beneficiary.villageStr].filter(Boolean).join(", ")}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center text-sm text-[#5d6e64]">
                   <Calendar className="h-4 w-4 mr-3 text-[#9db0a4]" />
@@ -88,7 +126,7 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
 
           <div className="bg-white rounded-xl shadow-sm border border-[#d9e1d8] p-6">
             <h4 className="text-sm font-bold text-[#1c2b23] mb-4 flex items-center">
-              <RotateCcw className="h-4 w-4 mr-2 text-[#2c5a43]" /> Revolving Fund Summary
+              <RotateCcw className="h-4 w-4 mr-2 text-[#2c5a43]" /> Revolving Fund Obligation
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
@@ -96,8 +134,12 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
                 <span className="font-bold text-[#1c2b23]">{pigsReceived}</span>
               </div>
               <div className="flex justify-between text-sm">
+                <span className="text-[#5d6e64]">Required Returns (2/pig):</span>
+                <span className="font-bold text-[#1c2b23]">{expectedReturn}</span>
+              </div>
+              <div className="flex justify-between text-sm">
                 <span className="text-[#5d6e64]">Piglets Returned:</span>
-                <span className="font-bold text-[#1c2b23]">{pigletsReturned}</span>
+                <span className="font-bold text-[#2c5a43]">{pigletsReturned}</span>
               </div>
               <div className="flex justify-between text-sm border-t border-[#d9e1d8] pt-2">
                 <span className="text-[#5d6e64] font-semibold">Outstanding Returns:</span>
@@ -126,7 +168,7 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
               <div className="grid gap-4 sm:grid-cols-2">
                 {beneficiary.pigs.map(pig => (
                   <Link href={`/dashboard/admin/pigs/${pig.id}`} key={pig.id} className="block p-4 border border-[#d9e1d8] rounded-lg hover:bg-[#f2f5f0] transition-colors">
-                    <div className="font-medium text-[#2c5a43]">{pig.tagNumber}</div>
+                    <div className="font-medium text-[#2c5a43] font-mono">{pig.tagNumber}</div>
                     <div className="text-sm text-[#5d6e64] mt-1">{pig.breed} • {pig.sex}</div>
                     <div className="text-xs text-[#9db0a4] mt-2">Health: {pig.healthStatus || 'Unknown'}</div>
                   </Link>
@@ -147,8 +189,8 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
                       <PiggyBank className="h-5 w-5 text-[#2c5a43]" />
                     </div>
                     <div>
-                      <div className="font-medium text-[#1c2b23]">Received Pig {dist.pig.tagNumber}</div>
-                      <div className="text-xs text-[#9db0a4] mt-1">{new Date(dist.date).toLocaleDateString()}</div>
+                      <div className="font-medium text-[#1c2b23]">Received Pig <span className="font-mono">{dist.pig.tagNumber}</span></div>
+                      <div className="text-xs text-[#9db0a4] mt-1">{new Date(dist.distributionDate).toLocaleDateString()}</div>
                     </div>
                   </div>
                 ))}

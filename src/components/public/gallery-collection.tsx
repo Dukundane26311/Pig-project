@@ -46,7 +46,7 @@ export default function GalleryCollection({ items, categories }: { items: Galler
       </div>
 
       {visibleItems.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#d9e1d8] bg-white p-12 text-center text-[#5d6e64]">
+        <div className="rounded-2xl border border-dashed border-[#d9e1d8] bg-white p-6 text-center text-[#5d6e64] sm:p-12">
           No gallery items are available in this category right now.
         </div>
       ) : (

@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
@@ -14,11 +14,11 @@ const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxHeroImageSize = 10 * 1024 * 1024;
 
 const ensureAdmin = async () => {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "SUPER_ADMIN") {
+  const user = await getActiveUser([Role.SUPER_ADMIN]);
+  if (!user) {
     throw new Error("Unauthorized");
   }
-  return session;
+  return user;
 };
 
 const deleteStoredImage = async (imageUrl?: string | null) => {
@@ -65,7 +65,7 @@ const saveHeroImage = async (file: File | null, existingImageUrl?: string | null
 };
 
 export async function saveHeroSection(formData: FormData) {
-  const session = await ensureAdmin();
+  const user = await ensureAdmin();
 
   const title = String(formData.get("title") ?? "").trim() || "One Piglet. One Family. A Fund That Keeps Moving.";
   const description = String(formData.get("description") ?? "").trim() || "The revolving livestock model helps families build stable income through pig production, communal accountability, and a cycle of return that grows opportunity across Rwanda.";
@@ -121,7 +121,7 @@ export async function saveHeroSection(formData: FormData) {
       action: "UPDATED",
       entity: "WEBSITE_CONTENT",
       entityId: currentContent?.id ?? "home:hero",
-      user: { connect: { id: session.user.id } },
+      user: { connect: { id: user.id } },
       newValue: {
         page: "home",
         section: "hero",

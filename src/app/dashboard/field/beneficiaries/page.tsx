@@ -6,9 +6,10 @@ export const dynamic = "force-dynamic";
 export default async function BeneficiariesPage({
   searchParams,
 }: {
-  searchParams?: { q?: string | string[] };
+  searchParams?: Promise<{ q?: string | string[] }> | { q?: string | string[] };
 }) {
-  const searchTerm = Array.isArray(searchParams?.q) ? searchParams.q[0] : searchParams?.q ?? "";
+  const resolvedParams = searchParams ? await Promise.resolve(searchParams) : undefined;
+  const searchTerm = Array.isArray(resolvedParams?.q) ? resolvedParams.q[0] : resolvedParams?.q ?? "";
   const normalizedSearch = searchTerm.trim();
 
   const beneficiaries = await prisma.beneficiary.findMany({

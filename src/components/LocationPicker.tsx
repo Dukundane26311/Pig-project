@@ -1,14 +1,47 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getCells, getDistricts, getSectors, getVillages } from "@/app/actions/location";
 
 type LocationOption = { id: string; name: string; code: string | null };
 
-const selectClass =
-  "mt-1 block w-full border border-[#d9e1d8] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm bg-white text-[#1c2b23] disabled:bg-[#f2f5f0] disabled:text-[#9db0a4]";
+export interface LocationChangeData {
+  districtId: string;
+  districtName: string;
+  sectorId: string;
+  sectorName: string;
+  cellId: string;
+  cellName: string;
+  villageId: string;
+  villageName: string;
+}
 
-export function LocationPicker({ villageRequired = false }: { villageRequired?: boolean }) {
+const selectClass =
+  "mt-1 block w-full border border-[#d9e1d8] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm bg-white text-[#1c2b23] disabled:bg-[#f2f5f0] disabled:text-[#9db0a4] transition-colors";
+
+export function LocationPicker({
+  villageRequired = false,
+  initialDistrictId = "",
+  initialSectorId = "",
+  initialCellId = "",
+  initialVillageId = "",
+  initialDistrictName = "",
+  initialSectorName = "",
+  initialCellName = "",
+  initialVillageName = "",
+  onChange,
+}: {
+  villageRequired?: boolean;
+  initialDistrictId?: string;
+  initialSectorId?: string;
+  initialCellId?: string;
+  initialVillageId?: string;
+  initialDistrictName?: string;
+  initialSectorName?: string;
+  initialCellName?: string;
+  initialVillageName?: string;
+  onChange?: (data: LocationChangeData) => void;
+}) {
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [sectors, setSectors] = useState<LocationOption[]>([]);
   const [cells, setCells] = useState<LocationOption[]>([]);
@@ -18,63 +51,260 @@ export function LocationPicker({ villageRequired = false }: { villageRequired?: 
   const [sectorId, setSectorId] = useState("");
   const [cellId, setCellId] = useState("");
   const [villageId, setVillageId] = useState("");
-  const [, startTransition] = useTransition();
 
+  const [loadingDistricts, setLoadingDistricts] = useState(true);
+  const [loadingSectors, setLoadingSectors] = useState(false);
+  const [loadingCells, setLoadingCells] = useState(false);
+  const [loadingVillages, setLoadingVillages] = useState(false);
+
+  // Load districts on mount
   useEffect(() => {
-    startTransition(() => {
-      getDistricts().then(setDistricts).catch(() => setDistricts([]));
-    });
+    let active = true;
+    setLoadingDistricts(true);
+    getDistricts()
+      .then((data) => {
+        if (!active) return;
+        setDistricts(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load districts:", err);
+        if (active) setDistricts([]);
+      })
+      .finally(() => {
+        if (active) setLoadingDistricts(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
+  // Sync initial values when props change
   useEffect(() => {
+    let active = true;
+    const targetDistrict = initialDistrictId || initialDistrictName;
+    if (!targetDistrict) {
+      setDistrictId("");
+      setSectorId("");
+      setCellId("");
+      setVillageId("");
+      setSectors([]);
+      setCells([]);
+      setVillages([]);
+      return;
+    }
+
+    // Determine district id/code
+    const matchDistrict = districts.find(
+      (d) =>
+        d.id === targetDistrict ||
+        d.code === targetDistrict ||
+        d.name.toLowerCase() === targetDistrict.toLowerCase()
+    );
+    const resolvedDistId = matchDistrict ? matchDistrict.id : targetDistrict;
+
+    setDistrictId(resolvedDistId);
+    setLoadingSectors(true);
+
+    getSectors(resolvedDistId)
+      .then((loadedSectors) => {
+        if (!active) return;
+        setSectors(loadedSectors);
+        setLoadingSectors(false);
+
+        const targetSector = initialSectorId || initialSectorName;
+        if (!targetSector) {
+          setSectorId("");
+          setCellId("");
+          setVillageId("");
+          setCells([]);
+          setVillages([]);
+          return;
+        }
+
+        const matchSector = loadedSectors.find(
+          (s) =>
+            s.id === targetSector ||
+            s.code === targetSector ||
+            s.name.toLowerCase() === targetSector.toLowerCase()
+        );
+        const resolvedSecId = matchSector ? matchSector.id : targetSector;
+
+        setSectorId(resolvedSecId);
+        setLoadingCells(true);
+
+        return getCells(resolvedSecId).then((loadedCells) => {
+          if (!active) return;
+          setCells(loadedCells);
+          setLoadingCells(false);
+
+          const targetCell = initialCellId || initialCellName;
+          if (!targetCell) {
+            setCellId("");
+            setVillageId("");
+            setVillages([]);
+            return;
+          }
+
+          const matchCell = loadedCells.find(
+            (c) =>
+              c.id === targetCell ||
+              c.code === targetCell ||
+              c.name.toLowerCase() === targetCell.toLowerCase()
+          );
+          const resolvedCId = matchCell ? matchCell.id : targetCell;
+
+          setCellId(resolvedCId);
+          setLoadingVillages(true);
+
+          return getVillages(resolvedCId).then((loadedVillages) => {
+            if (!active) return;
+            setVillages(loadedVillages);
+            setLoadingVillages(false);
+
+            const targetVillage = initialVillageId || initialVillageName;
+            if (targetVillage) {
+              const matchVillage = loadedVillages.find(
+                (v) =>
+                  v.id === targetVillage ||
+                  v.code === targetVillage ||
+                  v.name.toLowerCase() === targetVillage.toLowerCase()
+              );
+              setVillageId(matchVillage ? matchVillage.id : targetVillage);
+            }
+          });
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to sync initial location:", err);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingSectors(false);
+          setLoadingCells(false);
+          setLoadingVillages(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    districts,
+    initialDistrictId,
+    initialDistrictName,
+    initialSectorId,
+    initialSectorName,
+    initialCellId,
+    initialCellName,
+    initialVillageId,
+    initialVillageName,
+  ]);
+
+  const handleDistrictChange = (newDistrictId: string) => {
+    setDistrictId(newDistrictId);
     setSectorId("");
+    setCellId("");
+    setVillageId("");
     setSectors([]);
-    setCellId("");
     setCells([]);
-    setVillageId("");
     setVillages([]);
-    if (!districtId) return;
-    startTransition(() => {
-      getSectors(districtId).then(setSectors).catch(() => setSectors([]));
-    });
-  }, [districtId]);
 
-  useEffect(() => {
+    if (!newDistrictId) return;
+
+    setLoadingSectors(true);
+    getSectors(newDistrictId)
+      .then((data) => {
+        setSectors(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load sectors:", err);
+        setSectors([]);
+      })
+      .finally(() => {
+        setLoadingSectors(false);
+      });
+  };
+
+  const handleSectorChange = (newSectorId: string) => {
+    setSectorId(newSectorId);
     setCellId("");
+    setVillageId("");
     setCells([]);
+    setVillages([]);
+
+    if (!newSectorId) return;
+
+    setLoadingCells(true);
+    getCells(newSectorId)
+      .then((data) => {
+        setCells(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load cells:", err);
+        setCells([]);
+      })
+      .finally(() => {
+        setLoadingCells(false);
+      });
+  };
+
+  const handleCellChange = (newCellId: string) => {
+    setCellId(newCellId);
     setVillageId("");
     setVillages([]);
-    if (!sectorId) return;
-    startTransition(() => {
-      getCells(sectorId).then(setCells).catch(() => setCells([]));
-    });
-  }, [sectorId]);
 
+    if (!newCellId) return;
+
+    setLoadingVillages(true);
+    getVillages(newCellId)
+      .then((data) => {
+        setVillages(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load villages:", err);
+        setVillages([]);
+      })
+      .finally(() => {
+        setLoadingVillages(false);
+      });
+  };
+
+  const handleVillageChange = (newVillageId: string) => {
+    setVillageId(newVillageId);
+  };
+
+  const districtName = useMemo(() => {
+    return districts.find((d) => d.id === districtId || d.code === districtId)?.name ?? "";
+  }, [districts, districtId]);
+
+  const sectorName = useMemo(() => {
+    return sectors.find((s) => s.id === sectorId || s.code === sectorId)?.name ?? "";
+  }, [sectors, sectorId]);
+
+  const cellName = useMemo(() => {
+    return cells.find((c) => c.id === cellId || c.code === cellId)?.name ?? "";
+  }, [cells, cellId]);
+
+  const villageName = useMemo(() => {
+    return villages.find((v) => v.id === villageId || v.code === villageId)?.name ?? "";
+  }, [villages, villageId]);
+
+  // Notify onChange if callback is provided
   useEffect(() => {
-    setVillageId("");
-    setVillages([]);
-    if (!cellId) return;
-    startTransition(() => {
-      getVillages(cellId).then(setVillages).catch(() => setVillages([]));
-    });
-  }, [cellId]);
-
-  const districtName = useMemo(
-    () => districts.find((item) => item.id === districtId)?.name ?? "",
-    [districts, districtId]
-  );
-  const sectorName = useMemo(
-    () => sectors.find((item) => item.id === sectorId)?.name ?? "",
-    [sectors, sectorId]
-  );
-  const cellName = useMemo(
-    () => cells.find((item) => item.id === cellId)?.name ?? "",
-    [cells, cellId]
-  );
-  const villageName = useMemo(
-    () => villages.find((item) => item.id === villageId)?.name ?? "",
-    [villages, villageId]
-  );
+    if (onChange) {
+      onChange({
+        districtId,
+        districtName,
+        sectorId,
+        sectorName,
+        cellId,
+        cellName,
+        villageId,
+        villageName,
+      });
+    }
+  }, [districtId, districtName, sectorId, sectorName, cellId, cellName, villageId, villageName, onChange]);
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -95,10 +325,11 @@ export function LocationPicker({ villageRequired = false }: { villageRequired?: 
           id="districtSelect"
           required
           value={districtId}
-          onChange={(event) => setDistrictId(event.target.value)}
+          disabled={loadingDistricts}
+          onChange={(event) => handleDistrictChange(event.target.value)}
           className={selectClass}
         >
-          <option value="">Select district</option>
+          <option value="">{loadingDistricts ? "Loading districts..." : "Select district"}</option>
           {districts.map((district) => (
             <option key={district.id} value={district.id}>
               {district.name}
@@ -114,12 +345,18 @@ export function LocationPicker({ villageRequired = false }: { villageRequired?: 
         <select
           id="sectorSelect"
           required
-          disabled={!districtId}
+          disabled={!districtId || loadingSectors}
           value={sectorId}
-          onChange={(event) => setSectorId(event.target.value)}
+          onChange={(event) => handleSectorChange(event.target.value)}
           className={selectClass}
         >
-          <option value="">{districtId ? "Select sector" : "Select a district first"}</option>
+          <option value="">
+            {!districtId
+              ? "Select a district first"
+              : loadingSectors
+                ? "Loading sectors..."
+                : "Select sector"}
+          </option>
           {sectors.map((sector) => (
             <option key={sector.id} value={sector.id}>
               {sector.name}
@@ -135,12 +372,18 @@ export function LocationPicker({ villageRequired = false }: { villageRequired?: 
         <select
           id="cellSelect"
           required
-          disabled={!sectorId}
+          disabled={!sectorId || loadingCells}
           value={cellId}
-          onChange={(event) => setCellId(event.target.value)}
+          onChange={(event) => handleCellChange(event.target.value)}
           className={selectClass}
         >
-          <option value="">{sectorId ? "Select cell" : "Select a sector first"}</option>
+          <option value="">
+            {!sectorId
+              ? "Select a sector first"
+              : loadingCells
+                ? "Loading cells..."
+                : "Select cell"}
+          </option>
           {cells.map((cell) => (
             <option key={cell.id} value={cell.id}>
               {cell.name}
@@ -156,12 +399,18 @@ export function LocationPicker({ villageRequired = false }: { villageRequired?: 
         <select
           id="villageSelect"
           required={villageRequired}
-          disabled={!cellId}
+          disabled={!cellId || loadingVillages}
           value={villageId}
-          onChange={(event) => setVillageId(event.target.value)}
+          onChange={(event) => handleVillageChange(event.target.value)}
           className={selectClass}
         >
-          <option value="">{cellId ? "Select village" : "Select a cell first"}</option>
+          <option value="">
+            {!cellId
+              ? "Select a cell first"
+              : loadingVillages
+                ? "Loading villages..."
+                : "Select village"}
+          </option>
           {villages.map((village) => (
             <option key={village.id} value={village.id}>
               {village.name}

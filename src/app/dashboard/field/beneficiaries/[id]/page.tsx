@@ -1,12 +1,17 @@
-// @ts-nocheck
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, Phone, Calendar, FileText, Activity, PiggyBank, Repeat, RotateCcw } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, MapPin, Phone, Calendar, FileText, Activity, PiggyBank, RotateCcw } from "lucide-react";
+import { getActiveUser } from "@/lib/active-user";
 
 export const dynamic = 'force-dynamic';
 
 export default async function BeneficiaryDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!(await getActiveUser([Role.SUPER_ADMIN, Role.FIELD_OFFICER]))) {
+    redirect("/dashboard");
+  }
+
   const { id } = await params;
   
   const beneficiary = await prisma.beneficiary.findUnique({
@@ -15,7 +20,8 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
       pigs: true,
       legacyReturns: true,
       distributions: { include: { pig: true } },
-      legacyRepayments: true,
+      returns: { select: { quantity: true } },
+      revolvingCycles: { select: { expectedReturn: true, status: true } },
       fieldVisits: {
         orderBy: { date: 'desc' },
         take: 5
@@ -29,9 +35,13 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
 
   // Calculate Revolving Fund Stats
   const pigsReceived = beneficiary.distributions.length;
-  const pigletsReturned = beneficiary.legacyReturns.length;
-  // Assume each pig received requires 3 piglets to be returned
-  const expectedReturn = pigsReceived * 3;
+  const pigletsReturned =
+    beneficiary.returns.reduce((total, returned) => total + returned.quantity, 0) +
+    beneficiary.legacyReturns.length;
+  const cycleExpectation = beneficiary.revolvingCycles
+    .filter((cycle) => cycle.status !== "CANCELLED")
+    .reduce((total, cycle) => total + cycle.expectedReturn, 0);
+  const expectedReturn = Math.max(cycleExpectation, pigsReceived * 2);
   const outstandingReturn = Math.max(0, expectedReturn - pigletsReturned);
 
   return (
@@ -45,7 +55,7 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
         </Link>
         <div>
           <h2 className="text-2xl font-bold font-serif text-[#1c2b23]">Beneficiary Profile</h2>
-          <p className="mt-1 text-sm text-[#5d6e64]">{beneficiary.currentBeneficiaryId}</p>
+          <p className="mt-1 text-sm text-[#5d6e64]">{beneficiary.beneficiaryNumber}</p>
         </div>
       </div>
 
@@ -74,9 +84,9 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
                 </div>
                 <div className="flex items-center text-sm text-[#5d6e64]">
                   <MapPin className="h-4 w-4 mr-3 text-[#9db0a4]" />
-                  {beneficiary.district}, {beneficiary.sector}
+                  {beneficiary.districtStr}, {beneficiary.sectorStr}
                   <br />
-                  {beneficiary.cell}, {beneficiary.village}
+                  {beneficiary.cellStr}, {beneficiary.villageStr}
                 </div>
                 <div className="flex items-center text-sm text-[#5d6e64]">
                   <Calendar className="h-4 w-4 mr-3 text-[#9db0a4]" />
@@ -148,7 +158,7 @@ export default async function BeneficiaryDetailPage({ params }: { params: Promis
                     </div>
                     <div>
                       <div className="font-medium text-[#1c2b23]">Received Pig {dist.pig.tagNumber}</div>
-                      <div className="text-xs text-[#9db0a4] mt-1">{new Date(dist.date).toLocaleDateString()}</div>
+                      <div className="text-xs text-[#9db0a4] mt-1">{new Date(dist.distributionDate).toLocaleDateString()}</div>
                     </div>
                   </div>
                 ))}

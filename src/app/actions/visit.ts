@@ -3,12 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 
 export async function createFieldVisit(formData: FormData) {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
+  const user = await getActiveUser([Role.SUPER_ADMIN, Role.FIELD_OFFICER]);
+  if (!user) throw new Error("Unauthorized");
 
   const beneficiaryId = formData.get("beneficiaryId") as string;
   const pigId = formData.get("pigId") as string;
@@ -24,7 +24,7 @@ export async function createFieldVisit(formData: FormData) {
     data: {
       beneficiaryId,
       pigId: pigId || null,
-      fieldOfficerId: session.user.id,
+      fieldOfficerId: user.id,
       date: new Date(),
       purpose,
       observations,
@@ -36,6 +36,6 @@ export async function createFieldVisit(formData: FormData) {
     }
   });
 
-  revalidatePath("/dashboard/visits");
-  redirect("/dashboard/visits");
+  revalidatePath("/dashboard/admin/visits");
+  redirect("/dashboard/admin/visits");
 }

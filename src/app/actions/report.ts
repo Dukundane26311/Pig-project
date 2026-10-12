@@ -1,48 +1,56 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 
 export async function createEmployeeReport(formData: FormData) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || (session.user.role !== "FIELD_OFFICER" && session.user.role !== "SUPER_ADMIN")) {
+  const user = await getActiveUser([Role.FIELD_OFFICER, Role.SUPER_ADMIN]);
+  if (!user) {
     throw new Error("Unauthorized");
   }
 
-  const employeeReportModel = (prisma as any).employeeReport;
-
-  if (!employeeReportModel) {
-    throw new Error("Daily reports are temporarily unavailable. Please regenerate the Prisma client.");
+  const dateValue = formData.get("date");
+  const workDoneValue = formData.get("workDone");
+  const dateRaw = typeof dateValue === "string" ? dateValue : "";
+  const workDone = typeof workDoneValue === "string" ? workDoneValue.trim() : "";
+  const date = new Date(dateRaw);
+  if (!dateRaw || Number.isNaN(date.getTime()) || !workDone) {
+    throw new Error("Enter a valid report date and work summary.");
   }
+  if (workDone.length > 10000) throw new Error("Work summary is too long.");
 
-  const date = formData.get("date") as string;
-  const workDone = formData.get("workDone") as string;
-  const familiesVisited = parseInt(formData.get("familiesVisited") as string) || 0;
-  const pigsDistributed = parseInt(formData.get("pigsDistributed") as string) || 0;
-  const pigsReturned = parseInt(formData.get("pigsReturned") as string) || 0;
-  const problemsFound = formData.get("problemsFound") as string;
-  const otherActivities = formData.get("otherActivities") as string;
-  const comment = formData.get("comment") as string;
+  const readCount = (fieldName: string) => {
+    const raw = formData.get(fieldName);
+    if (raw == null || raw === "") return 0;
+    const value = typeof raw === "string" ? Number(raw) : Number.NaN;
+    if (!Number.isInteger(value) || value < 0 || value > 100000) {
+      throw new Error(`Enter a valid ${fieldName} count.`);
+    }
+    return value;
+  };
+  const readOptionalText = (fieldName: string, limit = 5000) => {
+    const raw = formData.get(fieldName);
+    if (raw == null) return null;
+    if (typeof raw !== "string") throw new Error(`Invalid ${fieldName} value.`);
+    const value = raw.trim();
+    if (value.length > limit) throw new Error(`${fieldName} is too long.`);
+    return value || null;
+  };
 
-  if (!date || !workDone) {
-    throw new Error("Missing required fields");
-  }
-
-  await employeeReportModel.create({
+  await prisma.employeeReport.create({
     data: {
-      date: new Date(date),
-      employeeId: session.user.id,
+      date,
+      employeeId: user.id,
       workDone,
-      familiesVisited,
-      pigsDistributed,
-      pigsReturned,
-      problemsFound,
-      otherActivities,
-      comment,
+      familiesVisited: readCount("familiesVisited"),
+      pigsDistributed: readCount("pigsDistributed"),
+      pigsReturned: readCount("pigsReturned"),
+      problemsFound: readOptionalText("problemsFound"),
+      otherActivities: readOptionalText("otherActivities"),
+      comment: readOptionalText("comment"),
     },
   });
 

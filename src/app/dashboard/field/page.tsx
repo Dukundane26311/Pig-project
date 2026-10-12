@@ -26,7 +26,7 @@ export default async function FieldDashboard() {
             <Users className="h-5 w-5" />
           </div>
           <p className="kpi-label">My beneficiaries</p>
-          <p className="mt-3 text-4xl font-bold text-[#1b2d24]">—</p>
+          <p className="mt-3 text-3xl font-bold leading-tight text-[#1b2d24] sm:text-4xl">-</p>
         </div>
 
         <div className="rounded-[24px] border border-[#dfe7df] bg-white p-5 shadow-[0_10px_24px_rgba(16,28,23,0.03)]">
@@ -34,11 +34,11 @@ export default async function FieldDashboard() {
             <PiggyBank className="h-5 w-5" />
           </div>
           <p className="kpi-label">Distributed pigs</p>
-          <p className="mt-3 text-4xl font-bold text-[#1b2d24]">—</p>
+          <p className="mt-3 text-3xl font-bold leading-tight text-[#1b2d24] sm:text-4xl">-</p>
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-[#dfe7df] bg-white p-6 shadow-[0_10px_24px_rgba(16,28,23,0.03)]">
+      <div className="rounded-[24px] border border-[#dfe7df] bg-white p-5 shadow-[0_10px_24px_rgba(16,28,23,0.03)] sm:rounded-[28px] sm:p-6">
         <h2 className="text-xl font-semibold text-[#1b2d24]">Quick actions</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {quickActions.map(({ label, href, icon: Icon }) => (

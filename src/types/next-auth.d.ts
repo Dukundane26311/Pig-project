@@ -1,7 +1,8 @@
-import NextAuth, { DefaultSession, DefaultUser } from "next-auth"
+import type { DefaultSession, DefaultUser } from "next-auth"
 
 declare module "next-auth" {
   interface Session {
+    accessToken?: string
     user: {
       id: string
       role: string
@@ -20,6 +21,7 @@ declare module "next-auth" {
     assignedSectorId: string | null
     assignedCellId: string | null
     assignedVillageId: string | null
+    token?: string
   }
 }
 
@@ -32,5 +34,6 @@ declare module "next-auth/jwt" {
     assignedSectorId: string | null
     assignedCellId: string | null
     assignedVillageId: string | null
+    accessToken?: string
   }
 }

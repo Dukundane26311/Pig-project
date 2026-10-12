@@ -3,48 +3,73 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 
 export async function createLitter(formData: FormData) {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
+  const user = await getActiveUser([Role.SUPER_ADMIN, Role.FIELD_OFFICER, Role.VETERINARIAN]);
+  if (!user) throw new Error("Unauthorized");
 
-  const pigId = formData.get("pigId") as string;
-  const dateOfBirth = formData.get("dateOfBirth") as string;
-  const numberBorn = parseInt(formData.get("numberBorn") as string, 10);
-  const numberSurvived = parseInt(formData.get("numberSurvived") as string, 10);
+  const pigIdValue = formData.get("pigId");
+  const dateOfBirthValue = formData.get("dateOfBirth");
+  const pigId = typeof pigIdValue === "string" ? pigIdValue : "";
+  const dateOfBirthRaw = typeof dateOfBirthValue === "string" ? dateOfBirthValue : "";
+  const numberBorn = Number(formData.get("numberBorn"));
+  const numberSurvived = Number(formData.get("numberSurvived"));
+  if (!pigId || !dateOfBirthRaw) throw new Error("Pig and birth date are required.");
+  const dateOfBirth = new Date(dateOfBirthRaw);
+  if (Number.isNaN(dateOfBirth.getTime())) throw new Error("Enter a valid birth date.");
+  if (
+    !Number.isInteger(numberBorn) ||
+    !Number.isInteger(numberSurvived) ||
+    numberBorn < 1 ||
+    numberBorn > 50 ||
+    numberSurvived < 0 ||
+    numberSurvived > numberBorn
+  ) {
+    throw new Error("Enter valid born and surviving piglet counts.");
+  }
   const numberLost = numberBorn - numberSurvived;
 
-  const litter = await prisma.litter.create({
-    data: {
-      motherPigId: pigId,
-      actualBirthDate: new Date(dateOfBirth),
-      numberBorn,
-      numberAlive: numberSurvived,
-      numberDead: numberLost,
-      recordedById: session.user.id,
+  await prisma.$transaction(async (tx) => {
+    const pig = await tx.pig.findFirst({
+      where: { id: pigId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!pig) throw new Error("Pig not found.");
+
+    const litter = await tx.litter.create({
+      data: {
+        motherPigId: pig.id,
+        actualBirthDate: dateOfBirth,
+        numberBorn,
+        numberAlive: numberSurvived,
+        numberDead: numberLost,
+        recordedById: user.id,
+      },
+    });
+
+    const pigletCount = await tx.piglet.count();
+    const pigletsData = Array.from({ length: numberSurvived }, (_, index) => ({
+      tagNumber: `PGL-${String(pigletCount + index + 1).padStart(6, "0")}`,
+      litterId: litter.id,
+      birthDate: dateOfBirth,
+      status: "WITH_MOTHER" as const,
+    }));
+
+    if (pigletsData.length > 0) {
+      await tx.piglet.createMany({ data: pigletsData });
     }
+
+    await tx.pig.update({
+      where: { id: pigId },
+      data: { status: "PIGLETS_RECORDED" },
+    });
   });
 
-  const pigletCount = await prisma.piglet.count();
-
-  const pigletsData = Array.from({ length: numberSurvived }).map((_, index) => ({
-    tagNumber: `PGL-${String(pigletCount + index + 1).padStart(6, '0')}`,
-    litterId: litter.id,
-    birthDate: new Date(dateOfBirth),
-    status: 'WITH_MOTHER' as const,
-  }));
-
-  if (pigletsData.length > 0) {
-    await prisma.piglet.createMany({ data: pigletsData });
-  }
-
-  await prisma.pig.update({
-    where: { id: pigId },
-    data: { status: 'PIGLETS_RECORDED' }
-  });
-
-  revalidatePath(`/dashboard/pigs/${pigId}`);
-  redirect(`/dashboard/pigs/${pigId}`);
+  revalidatePath(`/dashboard/admin/pigs/${pigId}`);
+  revalidatePath(`/dashboard/field/pigs/${pigId}`);
+  redirect(user.role === Role.SUPER_ADMIN
+    ? `/dashboard/admin/pigs/${pigId}`
+    : `/dashboard/field/pigs/${pigId}`);
 }

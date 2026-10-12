@@ -1,26 +1,34 @@
-// @ts-nocheck
+import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Plus, CreditCard, DollarSign, ArrowUpRight, ArrowDownRight, CheckCircle } from "lucide-react";
 import { approveTransaction } from "@/app/actions/finance";
+import { getFinanceUser } from "@/lib/finance-access";
+import { formatRwf } from "@/lib/format-rwf";
 
 export const dynamic = 'force-dynamic';
 
 export default async function FinancePage() {
+  const user = await getFinanceUser();
+  if (!user || user.role !== "SUPER_ADMIN") {
+    redirect("/dashboard");
+  }
+
   const transactions = await prisma.financeTransaction.findMany({
-    include: { createdBy: true, approvedBy: true },
-    orderBy: { date: 'desc' },
+    where: { deletedAt: null },
+    orderBy: { transactionDate: 'desc' },
   });
 
   const totals = transactions.reduce((acc, curr) => {
     if (curr.status === 'APPROVED') {
-      if (curr.type === 'INCOME') acc.income += Number(curr.amount);
-      if (curr.type === 'EXPENSE') acc.expense += Number(curr.amount);
+      if (curr.type === 'INCOME') acc.income = acc.income.plus(curr.amount);
+      if (curr.type === 'EXPENSE') acc.expense = acc.expense.plus(curr.amount);
     }
     return acc;
-  }, { income: 0, expense: 0 });
+  }, { income: new Prisma.Decimal(0), expense: new Prisma.Decimal(0) });
 
-  const balance = totals.income - totals.expense;
+  const balance = totals.income.minus(totals.expense);
 
   return (
     <div className="space-y-6">
@@ -47,7 +55,7 @@ export default async function FinancePage() {
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-[#5d6e64] truncate">Total Fund Balance</dt>
-                <dd className="text-2xl font-semibold font-serif text-[#1c2b23]">{balance.toLocaleString()} RWF</dd>
+                <dd className="text-2xl font-semibold font-serif text-[#1c2b23]">{formatRwf(balance)}</dd>
               </dl>
             </div>
           </div>
@@ -60,7 +68,7 @@ export default async function FinancePage() {
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-[#5d6e64] truncate">Total Income</dt>
-                <dd className="text-xl font-semibold font-serif text-green-600">{totals.income.toLocaleString()} RWF</dd>
+                <dd className="text-xl font-semibold font-serif text-green-600">{formatRwf(totals.income)}</dd>
               </dl>
             </div>
           </div>
@@ -73,7 +81,7 @@ export default async function FinancePage() {
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-[#5d6e64] truncate">Total Expenses</dt>
-                <dd className="text-xl font-semibold font-serif text-red-600">{totals.expense.toLocaleString()} RWF</dd>
+                <dd className="text-xl font-semibold font-serif text-red-600">{formatRwf(totals.expense)}</dd>
               </dl>
             </div>
           </div>
@@ -98,15 +106,15 @@ export default async function FinancePage() {
                   <tr key={t.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-[#1c2b23]">{t.transactionId}</div>
-                      <div className="text-sm text-[#5d6e64]">{new Date(t.date).toLocaleDateString()}</div>
+                      <div className="text-sm text-[#5d6e64]">{new Date(t.transactionDate).toLocaleDateString()}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-[#1c2b23]">{t.category}</div>
+                      <div className="text-sm text-[#1c2b23]">{t.reference}</div>
                       <div className="text-xs text-[#5d6e64] truncate max-w-xs">{t.description}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`text-sm font-bold ${t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
-                        {t.type === 'INCOME' ? '+' : '-'}{Number(t.amount).toLocaleString()} RWF
+                        {t.type === 'INCOME' ? '+' : '-'}{formatRwf(t.amount)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -134,7 +142,7 @@ export default async function FinancePage() {
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center">
+          <div className="p-6 text-center sm:p-12">
             <CreditCard className="mx-auto h-12 w-12 text-[#9db0a4] mb-4" />
             <h3 className="text-lg font-medium text-[#1c2b23] mb-1">No transactions found</h3>
             <p className="text-[#5d6e64] mb-4">Record your first income or expense.</p>

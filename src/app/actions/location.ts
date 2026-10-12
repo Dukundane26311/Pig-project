@@ -2,8 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { Role } from "@prisma/client";
+import { getActiveUser } from "@/lib/active-user";
 
 type LocationOption = { id: string; name: string; code: string | null };
 
@@ -14,53 +14,163 @@ function toOptions<T extends { id: string; name: string; code: string | null }>(
 }
 
 async function requireSession() {
-  const session = await getServerSession(authOptions);
-  if (!session) throw new Error("Unauthorized");
-  return session;
+  const user = await getActiveUser([Role.SUPER_ADMIN, Role.FIELD_OFFICER]);
+  if (!user) throw new Error("Unauthorized");
+  return user;
 }
 
 async function requireAdmin() {
-  const session = await requireSession();
-  if (session.user.role !== "SUPER_ADMIN") throw new Error("Unauthorized");
-  return session;
+  const user = await getActiveUser([Role.SUPER_ADMIN]);
+  if (!user) throw new Error("Unauthorized");
+  return user;
 }
 
-export async function getDistricts() {
-  await requireSession();
-  return toOptions(await prisma.district.findMany({ orderBy: { name: "asc" } }));
-}
-
-export async function getSectors(districtId: string) {
-  await requireSession();
-  if (!districtId) return [];
-  return toOptions(
-    await prisma.sector.findMany({
-      where: { districtId },
+export async function getDistricts(): Promise<LocationOption[]> {
+  try {
+    const fromDb = await prisma.district.findMany({
       orderBy: { name: "asc" },
-    })
-  );
+      select: { id: true, name: true, code: true },
+    });
+    if (fromDb.length > 0) {
+      return toOptions(fromDb);
+    }
+  } catch (err) {
+    console.error("Error loading districts from database, falling back to rwanda-geo:", err);
+  }
+
+  try {
+    const rg = await import("rwanda-geo");
+    const districts = rg.getAllDistricts();
+    return districts
+      .map((d) => ({ id: d.code, name: d.name, code: d.code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (err) {
+    console.error("Failed to load districts from rwanda-geo:", err);
+    return [];
+  }
 }
 
-export async function getCells(sectorId: string) {
-  await requireSession();
-  if (!sectorId) return [];
-  return toOptions(
-    await prisma.cell.findMany({
-      where: { sectorId },
+export async function getSectors(districtIdOrName: string): Promise<LocationOption[]> {
+  if (!districtIdOrName) return [];
+  const normalized = districtIdOrName.trim();
+  try {
+    const fromDb = await prisma.sector.findMany({
+      where: {
+        OR: [
+          { districtId: normalized },
+          { district: { code: normalized } },
+          { district: { name: { equals: normalized, mode: "insensitive" } } },
+        ],
+      },
       orderBy: { name: "asc" },
-    })
-  );
+      select: { id: true, name: true, code: true },
+    });
+    if (fromDb.length > 0) {
+      return toOptions(fromDb);
+    }
+  } catch (err) {
+    console.error("Error loading sectors from database, falling back to rwanda-geo:", err);
+  }
+
+  try {
+    const rg = await import("rwanda-geo");
+    const allDistricts = rg.getAllDistricts();
+    const dMatch = allDistricts.find(
+      (d) =>
+        d.code.toLowerCase() === normalized.toLowerCase() ||
+        d.name.toLowerCase() === normalized.toLowerCase()
+    );
+    const code = dMatch ? dMatch.code : normalized;
+    const sectors = rg.getSectorsByDistrict(code);
+    return sectors
+      .map((s) => ({ id: s.code, name: s.name, code: s.code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (err) {
+    console.error("Failed to load sectors from rwanda-geo:", err);
+    return [];
+  }
 }
 
-export async function getVillages(cellId: string) {
-  await requireSession();
-  if (!cellId) return [];
-  return toOptions(
-    await prisma.village.findMany({
-      where: { cellId },
+export async function getCells(sectorIdOrName: string): Promise<LocationOption[]> {
+  if (!sectorIdOrName) return [];
+  const normalized = sectorIdOrName.trim();
+  try {
+    const fromDb = await prisma.cell.findMany({
+      where: {
+        OR: [
+          { sectorId: normalized },
+          { sector: { code: normalized } },
+          { sector: { name: { equals: normalized, mode: "insensitive" } } },
+        ],
+      },
       orderBy: { name: "asc" },
-    })
-  );
+      select: { id: true, name: true, code: true },
+    });
+    if (fromDb.length > 0) {
+      return toOptions(fromDb);
+    }
+  } catch (err) {
+    console.error("Error loading cells from database, falling back to rwanda-geo:", err);
+  }
+
+  try {
+    const rg = await import("rwanda-geo");
+    const allSectors = rg.getAllSectors();
+    const sMatch = allSectors.find(
+      (s) =>
+        s.code.toLowerCase() === normalized.toLowerCase() ||
+        s.name.toLowerCase() === normalized.toLowerCase()
+    );
+    const code = sMatch ? sMatch.code : normalized;
+    const cells = rg.getCellsBySector(code);
+    return cells
+      .map((c) => ({ id: c.code, name: c.name, code: c.code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (err) {
+    console.error("Failed to load cells from rwanda-geo:", err);
+    return [];
+  }
+}
+
+export async function getVillages(cellIdOrName: string): Promise<LocationOption[]> {
+  if (!cellIdOrName) return [];
+  const normalized = cellIdOrName.trim();
+  try {
+    const fromDb = await prisma.village.findMany({
+      where: {
+        OR: [
+          { cellId: normalized },
+          { cell: { code: normalized } },
+          { cell: { name: { equals: normalized, mode: "insensitive" } } },
+        ],
+      },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, code: true },
+    });
+    if (fromDb.length > 0) {
+      return toOptions(fromDb);
+    }
+  } catch (err) {
+    console.error("Error loading villages from database, falling back to rwanda-geo:", err);
+  }
+
+  try {
+    const rg = await import("rwanda-geo");
+    const allCells = rg.getAllCells();
+    const cMatch = allCells.find(
+      (c) =>
+        c.code.toLowerCase() === normalized.toLowerCase() ||
+        c.name.toLowerCase() === normalized.toLowerCase()
+    );
+    const code = cMatch ? cMatch.code : normalized;
+    const villages = rg.getVillagesByCell(code);
+    return villages
+      .map((v) => ({ id: v.code, name: v.name, code: v.code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (err) {
+    console.error("Failed to load villages from rwanda-geo:", err);
+    return [];
+  }
 }
 
 export async function createDistrict(formData: FormData) {

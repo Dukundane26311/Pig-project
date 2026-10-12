@@ -1,8 +1,15 @@
 import { createFinanceTransaction } from "@/app/actions/finance";
+import { getFinanceUser } from "@/lib/finance-access";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function NewTransactionPage() {
+export default async function NewTransactionPage() {
+  const user = await getFinanceUser();
+  if (!user || user.role !== "SUPER_ADMIN") {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-8">

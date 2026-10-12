@@ -99,3 +99,91 @@ a {
 .text-balance {
   text-wrap: balance;
 }
+
+/* Individual Display Preferences: Typography Text Sizes */
+html[data-text-size="small"] {
+  font-size: 14px;
+}
+
+html[data-text-size="default"] {
+  font-size: 16px;
+}
+
+html[data-text-size="large"] {
+  font-size: 18px;
+}
+
+/* Individual Display Preferences: Dark Theme */
+html[data-theme="dark"] {
+  --background: #0f1813;
+  --panel: #16241c;
+  --panel-soft: #1d2e24;
+  --panel-alt: #1a2a21;
+  --foreground: #ecf3ed;
+  --muted: #8fa395;
+  --line: #26382c;
+  --primary: #3b7457;
+  --primary-strong: #4f9671;
+  --primary-soft: #1a3326;
+  --accent: #d8708c;
+  --accent-soft: #381d26;
+  --earth: #b39b7d;
+  --shadow: rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: var(--panel) !important;
+  color: var(--foreground);
+}
+
+html[data-theme="dark"] .bg-\[\#fcfdfc\],
+html[data-theme="dark"] .bg-\[\#f8faf8\],
+html[data-theme="dark"] .bg-\[\#fbfcfb\],
+html[data-theme="dark"] .bg-\[\#f2f5f0\],
+html[data-theme="dark"] .bg-\[\#f3f5f1\],
+html[data-theme="dark"] .bg-gray-50 {
+  background-color: var(--panel-soft) !important;
+  color: var(--foreground);
+}
+
+html[data-theme="dark"] .text-\[\#1c2b23\],
+html[data-theme="dark"] .text-\[\#1b2d24\],
+html[data-theme="dark"] .text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+html[data-theme="dark"] .text-\[\#5d6e64\],
+html[data-theme="dark"] .text-\[\#5d6d64\],
+html[data-theme="dark"] .text-\[\#7a8a82\],
+html[data-theme="dark"] .text-gray-500,
+html[data-theme="dark"] .text-gray-600 {
+  color: var(--muted) !important;
+}
+
+html[data-theme="dark"] .border-\[\#dfe7df\],
+html[data-theme="dark"] .border-\[\#d9e1d8\],
+html[data-theme="dark"] .border-gray-200 {
+  border-color: var(--line) !important;
+}
+
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: var(--panel-soft) !important;
+  color: var(--foreground) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme="dark"] input:disabled,
+html[data-theme="dark"] select:disabled,
+html[data-theme="dark"] textarea:disabled {
+  background-color: #121c16 !important;
+  color: #6a7c71 !important;
+}
+
