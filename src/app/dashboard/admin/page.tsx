@@ -86,55 +86,55 @@ export default async function AdminDashboardOverview() {
       title: "Pigs Distributed",
       value: pigsDistributed,
       icon: ArrowDownRight,
-      tone: "bg-[#eef3da] text-[#536334]",
+      tone: "bg-emerald-50 text-emerald-700",
     },
     {
       title: "Pigs Returned",
       value: pigsReturned,
       icon: RefreshCw,
-      tone: "bg-[#eef3da] text-[#536334]",
+      tone: "bg-blue-50 text-blue-700",
     },
     {
       title: "Pigs in Stock",
       value: pigsInStock,
       icon: Package,
-      tone: "bg-[#e3efe7] text-[#173d2e]",
+      tone: "bg-amber-50 text-amber-700",
     },
     {
       title: "Total Money Balance",
       value: totalMoneyBalance,
       icon: Wallet,
-      tone: "bg-[#eef3da] text-[#536334]",
+      tone: "bg-emerald-50 text-emerald-700",
     },
     {
       title: "Pigs with Health Problems",
       value: pigsWithHealthProblems,
       icon: HeartPulse,
-      tone: "bg-[#f7e3ea] text-[#a44d67]",
+      tone: "bg-rose-50 text-rose-700",
     },
   ];
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5d6d64]">Pig Project Rwanda</p>
-        <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#1b2d24]">Admin Dashboard</h2>
-        <p className="mt-2 text-sm text-[#5d6d64]">One Piglet. One Family. A Fund That Keeps Moving.</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Operations Control</p>
+        <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Admin Dashboard</h2>
+        <p className="mt-1 text-xs text-slate-500">Live operational overview across livestock, distributions, returns, and fund balance.</p>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {summaryCards.map(({ title, value, icon: Icon, tone }, idx) => (
           <div 
             key={idx} 
-            className="rounded-[16px] border border-[#dfe7df] bg-white p-5 shadow-[0_4px_12px_rgba(16,28,23,0.03)] hover:shadow-[0_8px_24px_rgba(16,28,23,0.06)] transition-shadow"
+            className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors"
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-medium text-[#5d6d64]">{title}</p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-[#1b2d24] font-serif">{value}</p>
+                <p className="text-xs font-medium text-slate-500">{title}</p>
+                <p className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900">{value}</p>
               </div>
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tone}`}>
-                <Icon className="h-5 w-5" />
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tone}`}>
+                <Icon className="h-4.5 w-4.5" />
               </div>
             </div>
           </div>

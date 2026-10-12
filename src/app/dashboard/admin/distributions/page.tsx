@@ -81,26 +81,26 @@ export default async function AdminDistributionsAndReturnsPage() {
   const totalPigletsReturned = returns.reduce((sum, r) => sum + (r._sum.quantity ?? 0), 0);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5d6d64]">Operations Engine</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#1b2d24]">Pig Distributions & Return Obligations</h1>
-          <p className="mt-1 text-sm text-[#5d6e64]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Operations Engine</p>
+          <h1 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Pig Distributions & Return Obligations</h1>
+          <p className="mt-1 text-xs text-slate-500">
             Monitor livestock distribution agreements and track the revolving mandate of two returned piglets per family.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Link
             href="/dashboard/field/distributions/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#173d2e] px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#102a22] transition"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#064e3b] px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#053d2e] transition"
           >
             <PlusCircle className="h-4 w-4" />
             <span>Record Distribution</span>
           </Link>
           <Link
             href="/dashboard/field/returns/new"
-            className="inline-flex items-center gap-2 rounded-xl border border-[#dfe7df] bg-white px-4 py-2.5 text-sm font-semibold text-[#173d2e] shadow-sm hover:bg-[#f3f5f1] transition"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition"
           >
             <RefreshCw className="h-4 w-4" />
             <span>Record Returned Piglet</span>
@@ -109,60 +109,60 @@ export default async function AdminDistributionsAndReturnsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-[20px] border border-[#dfe7df] bg-white p-5 shadow-sm">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#5d6d64]">Distributions</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef3da] text-[#536334]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Distributions</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <ArrowRightCircle className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-bold text-[#1b2d24]">{totalDistributions}</p>
-          <p className="mt-1 text-xs text-[#7a8a82]">Families receiving livestock</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{totalDistributions}</p>
+          <p className="mt-0.5 text-xs text-slate-500">Families receiving livestock</p>
         </div>
 
-        <div className="rounded-[20px] border border-[#dfe7df] bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#5d6d64]">Piglets Returned</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#e3efe7] text-[#173d2e]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Piglets Returned</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <RefreshCw className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-bold text-[#173d2e]">{totalPigletsReturned}</p>
-          <p className="mt-1 text-xs text-[#7a8a82]">Revolving into the fund</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-700">{totalPigletsReturned}</p>
+          <p className="mt-0.5 text-xs text-slate-500">Revolving into the fund</p>
         </div>
 
-        <div className="rounded-[20px] border border-[#dfe7df] bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#5d6d64]">Completed</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#e3efe7] text-[#173d2e]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Completed</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-bold text-[#1b2d24]">{completedCount}</p>
-          <p className="mt-1 text-xs text-[#7a8a82]">Both 2 piglets fulfilled</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{completedCount}</p>
+          <p className="mt-0.5 text-xs text-slate-500">Both 2 piglets fulfilled</p>
         </div>
 
-        <div className="rounded-[20px] border border-[#dfe7df] bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#5d6d64]">Partially Returned</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#e7f0fb] text-[#2d5b78]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Partially Returned</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
               <Clock className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-bold text-[#2d5b78]">{partialCount}</p>
-          <p className="mt-1 text-xs text-[#7a8a82]">1 of 2 piglets returned</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-blue-700">{partialCount}</p>
+          <p className="mt-0.5 text-xs text-slate-500">1 of 2 piglets returned</p>
         </div>
 
-        <div className="rounded-[20px] border border-[#dfe7df] bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#5d6d64]">Outstanding</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7e3ea] text-[#a44d67]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Outstanding</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
               <Clock className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-bold text-[#a44d67]">{outstandingCount}</p>
-          <p className="mt-1 text-xs text-[#7a8a82]">Awaiting first return</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-rose-700">{outstandingCount}</p>
+          <p className="mt-0.5 text-xs text-slate-500">Awaiting first return</p>
         </div>
       </div>
 
@@ -170,12 +170,12 @@ export default async function AdminDistributionsAndReturnsPage() {
       <AdminDistributionsTableClient initialRows={rows} />
 
       {/* Traceable Returned Piglets Ledger */}
-      <div className="rounded-[24px] border border-[#dfe7df] bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-[#dfe7df] bg-[#f8faf8] px-6 py-4 flex items-center justify-between">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+        <div className="border-b border-slate-200 bg-slate-50/75 px-5 py-3.5 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1b2d24]">Recent Returned Piglet Records</h2>
-            <p className="text-xs text-[#5d6e64]">
-              Each accepted piglet is registered as an identifiable asset with preserved parentage and enters the veterinary inspection queue.
+            <h2 className="text-sm font-bold text-slate-900">Recent Returned Piglet Records</h2>
+            <p className="text-xs text-slate-500">
+              Traceable records of piglets returned by beneficiaries under the revolving fund agreement.
             </p>
           </div>
           <Link
@@ -194,9 +194,6 @@ export default async function AdminDistributionsAndReturnsPage() {
                   Return Date
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
-                  Returned Piglet Asset ID
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
                   Returning Beneficiary
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
@@ -212,11 +209,6 @@ export default async function AdminDistributionsAndReturnsPage() {
                 <tr key={ret.id} className="hover:bg-[#f8faf8] transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1b2d24]">
                     {format(new Date(ret.returnDate), "MMM d, yyyy")}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-mono text-xs font-bold text-[#173d2e]">
-                      {ret.pig?.tagNumber ?? "Registered Piglet"}
-                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="text-sm font-medium text-[#1b2d24]">{ret.beneficiary.fullName}</p>
@@ -240,7 +232,7 @@ export default async function AdminDistributionsAndReturnsPage() {
               ))}
               {returnLedger.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-[#5d6e64]">
+                  <td colSpan={4} className="px-6 py-8 text-center text-sm text-[#5d6e64]">
                     No returned piglets recorded in the ledger yet.
                   </td>
                 </tr>

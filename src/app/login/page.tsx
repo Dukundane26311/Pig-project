@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Lock, Mail, Loader2, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,62 +46,66 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f2f5f0] px-4">
-      <div
-        className="w-full rounded-2xl border border-[#d9e1d8] bg-white shadow-xl overflow-hidden"
-        style={{ maxWidth: "min(28rem, calc(100vw - 2rem))" }}
-      >
-        <div className="bg-[#2c5a43] p-8 text-center">
-          <h1 className="text-2xl font-semibold text-white mb-2 font-serif tracking-tight">Pig Project</h1>
-          <p className="text-[#e4ede6] text-sm">Value Protocols, Rwanda</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-slate-50 via-white to-slate-50 px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors mb-6">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to public website</span>
+          </Link>
+          <div className="flex justify-center">
+            <img src="/pig-project-rwanda-logo.svg" alt="Pig Project Rwanda" className="h-12 w-auto" />
+          </div>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
+            Operations Workspace
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Sign in with your authorized staff credentials
+          </p>
         </div>
-        
-        <div className="p-8">
-          <h2 className="text-2xl font-semibold text-[#1c2b23] mb-6 text-center">
-            Sign In
-          </h2>
-          
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
           {error && (
-            <div className="bg-[#a63a3a]/10 border border-[#a63a3a] text-[#a63a3a] p-3 rounded-lg text-sm mb-6 text-center">
+            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 text-center font-medium">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#5d6e64] mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-[#9db0a4]" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Mail className="h-4 w-4" />
                 </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-[#d9e1d8] rounded-lg focus:ring-2 focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm bg-white text-[#1c2b23]"
-                  placeholder="admin@valueprotocols.rw"
+                  className="block w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                  placeholder="name@valueprotocols.rw"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#5d6e64] mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-[#9db0a4]" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Lock className="h-4 w-4" />
                 </div>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-[#d9e1d8] rounded-lg focus:ring-2 focus:ring-[#c9577a] focus:border-[#c9577a] sm:text-sm bg-white text-[#1c2b23]"
-                  placeholder="********"
+                  className="block w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                  placeholder="••••••••"
                 />
               </div>
             </div>
@@ -108,14 +113,20 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#2c5a43] hover:bg-[#1c2b23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c9577a] transition-colors"
+              className="w-full flex justify-center items-center py-2.5 px-4 rounded-lg text-sm font-semibold text-white bg-[#064e3b] hover:bg-[#053d2e] shadow-xs disabled:opacity-50 transition-all cursor-pointer mt-2"
             >
               {loading ? (
-                <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                <Loader2 className="animate-spin h-4 w-4 mr-2" />
               ) : null}
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in..." : "Sign In to Workspace"}
             </button>
           </form>
+
+          <div className="mt-6 border-t border-slate-100 pt-4 text-center">
+            <p className="text-[11px] text-slate-400">
+              Value Protocols Rwanda &bull; Revolving Livestock Platform
+            </p>
+          </div>
         </div>
       </div>
     </div>

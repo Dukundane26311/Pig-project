@@ -102,8 +102,8 @@ export function PigReturnForm({ backHref = "/dashboard/field/returns", beneficia
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold font-serif text-[#1c2b23]">Record Piglet Returns</h1>
-          <p className="mt-1 text-sm text-[#5d6e64]">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Record Piglet Returns</h1>
+          <p className="mt-1 text-xs text-slate-500">
             Register revolving piglets returned by beneficiaries and record health assessments.
           </p>
         </div>
@@ -111,28 +111,28 @@ export function PigReturnForm({ backHref = "/dashboard/field/returns", beneficia
 
       {/* Success Notification */}
       {successMessage && (
-        <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-5 shadow-sm flex items-start gap-3">
-          <CheckCircle2 className="h-5 w-5 text-[#15803d] shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-xs flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-700 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-[#15803d]">Saved Successfully</h4>
-            <p className="text-sm text-[#166534] mt-0.5">{successMessage}</p>
+            <h4 className="text-xs font-bold text-emerald-800">Saved Successfully</h4>
+            <p className="text-xs text-emerald-700 mt-0.5">{successMessage}</p>
           </div>
         </div>
       )}
 
       {/* Error / Validation Notification */}
       {errorMessage && (
-        <div className="rounded-2xl border border-[#fecaca] bg-[#fef2f2] p-5 shadow-sm flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-[#b91c1c] shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-xs flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-rose-700 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-[#b91c1c]">Validation Error</h4>
-            <p className="text-sm text-[#991b1b] mt-0.5">{errorMessage}</p>
+            <h4 className="text-xs font-bold text-rose-800">Validation Error</h4>
+            <p className="text-xs text-rose-700 mt-0.5">{errorMessage}</p>
           </div>
         </div>
       )}
 
       {/* Main Registration Form Card */}
-      <div className="rounded-[24px] border border-[#d9e1d8] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
         <div className="border-b border-[#dfe7df] bg-[#f8faf8] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <ArrowLeftCircle className="h-5 w-5 text-[#2c5a43]" />

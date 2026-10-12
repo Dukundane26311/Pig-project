@@ -103,19 +103,19 @@ export function AdminDistributionsTableClient({ initialRows }: AdminDistribution
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-[#dfe7df] bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-[#dfe7df] bg-[#f8faf8] px-6 py-4 flex items-center justify-between">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+        <div className="border-b border-slate-200 bg-slate-50/75 px-5 py-3.5 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1b2d24]">Two-Piglet Return Tracking Ledger</h2>
-            <p className="text-xs text-[#5d6e64]">
-              Each distributed pig creates a requirement of 2 returned piglets ($Outstanding = 2 - Returned$).
+            <h2 className="text-sm font-bold text-slate-900">Two-Piglet Return Tracking Ledger</h2>
+            <p className="text-xs text-slate-500">
+              Each distributed pig creates a requirement of 2 returned piglets (Outstanding = 2 - Returned).
             </p>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           {filteredRows.length === 0 ? (
-            <div className="p-8 text-center text-[#5d6e64]">
+            <div className="p-8 text-center text-slate-500 text-xs">
               <p>
                 {dateFilter
                   ? `No pigs found distributed on ${dateFilter}.`
@@ -125,77 +125,77 @@ export function AdminDistributionsTableClient({ initialRows }: AdminDistribution
                 <button
                   type="button"
                   onClick={() => setDateFilter("")}
-                  className="mt-2 text-xs text-[#2c5a43] underline font-medium hover:text-[#1c2b23]"
+                  className="mt-2 text-xs text-emerald-700 underline font-medium hover:text-emerald-900 cursor-pointer"
                 >
                   Clear date filter to see all distributions
                 </button>
               )}
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-[#dfe7df]">
-              <thead className="bg-[#f2f5f0]">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50/75">
                 <tr>
-                  <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Beneficiary
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Date
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Required
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Returned
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Outstanding
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Return Status
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-[#1c2b23]">
+                  <th scope="col" className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Action
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#dfe7df] bg-white">
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredRows.map(({ dist, required, returned, outstanding, status }) => (
-                  <tr key={dist.id} className="hover:bg-[#f8faf8] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm font-semibold text-[#1b2d24]">{dist.beneficiary.fullName}</p>
-                      <p className="text-xs text-[#7a8a82]">
+                  <tr key={dist.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <p className="text-sm font-semibold text-slate-900">{dist.beneficiary.fullName}</p>
+                      <p className="text-xs text-slate-500">
                         {dist.beneficiary.beneficiaryNumber} &bull; {dist.beneficiary.districtStr ?? "Rwanda"}
                       </p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#5d6e64]">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-600">
                       {format(new Date(dist.distributionDate), "MMM d, yyyy")}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-[#1b2d24]">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-center text-xs font-bold text-slate-900">
                       {required}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-[#173d2e]">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-center text-xs font-bold text-emerald-700">
                       {returned}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-[#a44d67]">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-center text-xs font-bold text-rose-600">
                       {outstanding}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
                           status === "Completed"
-                            ? "bg-[#e3efe7] text-[#173d2e]"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
                             : status === "Partially Returned"
-                            ? "bg-[#e7f0fb] text-[#2d5b78]"
-                            : "bg-[#f7e3ea] text-[#a44d67]"
+                            ? "bg-blue-50 text-blue-700 border-blue-200/60"
+                            : "bg-rose-50 text-rose-700 border-rose-200/60"
                         }`}
                       >
                         {status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-right text-xs font-medium">
                       <Link
                         href={`/dashboard/admin/beneficiaries/${dist.beneficiary.id}`}
-                        className="text-[#2c5a43] hover:underline"
+                        className="text-emerald-700 hover:text-emerald-900 font-semibold transition-colors"
                       >
                         View Family
                       </Link>

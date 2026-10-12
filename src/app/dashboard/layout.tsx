@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, Users, Stethoscope, FileText, Shield, LogOut, Menu, X,
   ArrowRightCircle, ArrowLeftCircle, History, Settings,
-  UserPlus, ImageIcon, TrendingUp, TrendingDown, Clock, RefreshCw, Calendar, PlusCircle, UserCog,
+  UserPlus, ImageIcon, TrendingUp, TrendingDown, RefreshCw, Calendar, PlusCircle, UserCog,
   Send, ChevronDown
 } from "lucide-react";
 import { useState } from "react";
@@ -22,7 +22,7 @@ const adminNavigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
   { name: 'Beneficiaries', href: '/dashboard/admin/beneficiaries', icon: Users },
   { name: 'Pig Register', href: '/dashboard/admin/pigs/new', icon: PlusCircle },
-  { name: 'Register', href: '/dashboard/admin/distributions', icon: ArrowRightCircle },
+  { name: 'Distributions', href: '/dashboard/admin/distributions', icon: ArrowRightCircle },
   { name: 'Veterinary', href: '/dashboard/admin/veterinary', icon: Stethoscope },
   { name: 'Finance', href: '/dashboard/admin/finance', icon: TrendingUp },
   {
@@ -112,27 +112,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button
               type="button"
               onClick={() => toggleDropdown(item.name)}
-              className={`group flex w-full items-center justify-between rounded-xl px-3 ${
-                isMobile ? "py-3" : "py-2.5"
-              } text-sm font-medium transition ${
+              className={`group flex w-full items-center justify-between rounded-lg px-3 ${
+                isMobile ? "py-2.5" : "py-2"
+              } text-xs font-medium transition ${
                 isChildActive
                   ? "bg-white/10 text-white font-semibold"
-                  : "text-[#dfe9e3] hover:bg-white/5 hover:text-white"
+                  : "text-emerald-100/75 hover:bg-white/5 hover:text-white"
               }`}
             >
               <div className="flex items-center">
-                <item.icon className={`mr-3 h-4 w-4 ${isChildActive ? "text-white" : "text-[#bdd0c5]"}`} />
+                <item.icon className={`mr-2.5 h-4 w-4 ${isChildActive ? "text-white" : "text-emerald-300/80"}`} />
                 <span>{item.name}</span>
               </div>
               <ChevronDown
-                className={`h-4 w-4 text-[#bdd0c5] transition-transform duration-200 ${
+                className={`h-3.5 w-3.5 text-emerald-300/70 transition-transform duration-200 ${
                   isOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
 
             {isOpen && (
-              <div className="ml-4 space-y-1 border-l border-white/15 pl-3 pt-1">
+              <div className="ml-3.5 space-y-1 border-l border-white/15 pl-3 pt-1">
                 {item.children.map((sub) => {
                   const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
                   return (
@@ -140,10 +140,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={sub.name}
                       href={sub.href}
                       onClick={() => isMobile && setMobileMenuOpen(false)}
-                      className={`flex items-center rounded-lg px-3 py-2 text-xs font-medium transition ${
+                      className={`flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
                         isSubActive
-                          ? "bg-[#e4efe6] text-[#173d2e] font-semibold shadow-sm"
-                          : "text-[#dfe9e3] hover:bg-white/5 hover:text-white"
+                          ? "bg-emerald-500/20 text-emerald-200 font-semibold"
+                          : "text-emerald-100/70 hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       {sub.name}
@@ -162,56 +162,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           key={item.name}
           href={item.href!}
           onClick={() => isMobile && setMobileMenuOpen(false)}
-          className={`group flex items-center rounded-xl px-3 ${
-            isMobile ? "py-3" : "py-2.5"
-          } text-sm font-medium transition ${
-            isActive ? "bg-[#e4efe6] text-[#173d2e] shadow-sm font-semibold" : "text-[#dfe9e3] hover:bg-white/5 hover:text-white"
+          className={`group flex items-center rounded-lg px-3 ${
+            isMobile ? "py-2.5" : "py-2"
+          } text-xs font-medium transition ${
+            isActive ? "bg-white/10 text-white font-semibold shadow-xs" : "text-emerald-100/75 hover:bg-white/5 hover:text-white"
           }`}
         >
-          <item.icon className={`mr-3 h-4 w-4 ${isActive ? "text-[#173d2e]" : "text-[#bdd0c5]"}`} />
+          <item.icon className={`mr-2.5 h-4 w-4 ${isActive ? "text-white" : "text-emerald-300/80"}`} />
           {item.name}
         </Link>
       );
     });
   };
 
+  const userInitial = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "U";
+
   return (
-    <div className="min-h-screen bg-[#f3f5f1] text-[#1b2d24]">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 antialiased">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 border-r border-[#dfe7df] bg-[#173d2e] text-white md:flex md:flex-col">
-          <div className="flex h-20 items-center border-b border-white/10 px-6">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#dfe9e3]">Pig Project</p>
-              <h1 className="mt-1 text-lg font-semibold tracking-tight">Rwanda</h1>
-            </div>
+        {/* Sleek, professional dark-forest sidebar */}
+        <aside className="hidden w-64 shrink-0 border-r border-emerald-950/30 bg-[#072419] text-white md:flex md:flex-col shadow-xs">
+          <div className="flex h-16 items-center border-b border-white/10 px-5">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-sm">
+                P
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80 leading-none">Pig Project</p>
+                <h1 className="mt-0.5 text-sm font-bold tracking-tight text-white group-hover:text-emerald-200 transition-colors">Rwanda Operations</h1>
+              </div>
+            </Link>
           </div>
 
-          <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+          <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
             {renderNav(navigation)}
           </nav>
 
-          <div className="border-t border-white/10 bg-[#102a22] px-4 py-4">
+          <div className="border-t border-white/10 bg-[#051c13] px-4 py-3.5">
             <div className="flex items-center justify-between gap-2">
-              <Link href="/dashboard/settings" className="min-w-0 group hover:opacity-80 transition">
-                <p className="truncate text-sm font-semibold text-white group-hover:underline">{session?.user?.name}</p>
-                <p className="truncate text-xs text-[#bfd0c4]">{session?.user?.role}</p>
+              <Link href="/dashboard/settings" className="flex items-center gap-2.5 min-w-0 group hover:opacity-90 transition">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-700/50 text-white font-bold text-xs border border-white/10">
+                  {userInitial}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-white group-hover:underline">{session?.user?.name}</p>
+                  <p className="truncate text-[10px] text-emerald-300/70">{session?.user?.role}</p>
+                </div>
               </Link>
               <div className="flex items-center gap-1 shrink-0">
                 <Link
                   href="/dashboard/settings"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#dfe9e3] hover:bg-white/5 hover:text-white"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-emerald-200/70 hover:bg-white/10 hover:text-white transition-colors"
                   title="Personal Settings"
                   aria-label="Personal Settings"
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-3.5 w-3.5" />
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/login" })}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#dfe9e3] hover:bg-white/5 hover:text-white"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-emerald-200/70 hover:bg-white/10 hover:text-white transition-colors"
                   title="Sign out"
                   aria-label="Sign out"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -219,24 +232,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-          <header className="sticky top-0 z-20 border-b border-[#dfe7df] bg-[#f8f7f5]/90 backdrop-blur-sm md:hidden">
-            <div className="flex items-center justify-between px-4 py-3">
+          {/* Mobile Header */}
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur-md md:hidden">
+            <div className="flex items-center justify-between px-4 py-2.5">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5d6d64]">Pig Project</p>
-                <h1 className="text-base font-semibold text-[#1b2d24]">Rwanda</h1>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pig Project Rwanda</p>
+                <h1 className="text-sm font-bold text-slate-900">Operations Workspace</h1>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfe7df] bg-white text-[#173d2e]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
                 aria-label="Toggle navigation"
               >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </button>
             </div>
           </header>
 
           {mobileMenuOpen && (
-            <div className="max-h-[calc(100vh-65px)] overflow-y-auto border-b border-[#dfe7df] bg-[#173d2e] p-4 md:hidden">
+            <div className="max-h-[calc(100vh-57px)] overflow-y-auto border-b border-emerald-950/40 bg-[#072419] p-4 md:hidden text-white">
               <nav className="space-y-1">
                 {renderNav(navigation, true)}
               </nav>

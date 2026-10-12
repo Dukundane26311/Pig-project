@@ -167,19 +167,19 @@ export function HistoricalRecordsClient({
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-serif text-[#1c2b23] flex items-center gap-2">
-            <History className="h-6 w-6 text-[#2c5a43]" /> Historical Records
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <History className="h-5 w-5 text-emerald-700" /> Historical Records
           </h1>
-          <p className="mt-1 text-sm text-[#5d6e64]">
+          <p className="mt-1 text-xs text-slate-500">
             {isAdmin
               ? "Comprehensive audit trail and activity history across all users and modules."
               : `Activity history recorded for your account (${currentUser.name || currentUser.email}).`}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-[#5d6e64] bg-[#f2f5f0] px-3.5 py-2 rounded-lg border border-[#d9e1d8]">
-          <Shield className="h-4 w-4 text-[#2c5a43]" />
-          <span>Read-Only &amp; Immutable System Audit Trail</span>
+        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+          <Shield className="h-3.5 w-3.5 text-emerald-700" />
+          <span>Immutable System Audit Trail</span>
         </div>
       </div>
 

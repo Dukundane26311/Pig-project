@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f2eb;
+  --background: #f8fafc;
   --panel: #ffffff;
-  --panel-soft: #f1f5f1;
-  --panel-alt: #edf4ee;
-  --foreground: #1b2d24;
-  --muted: #5d6d64;
-  --line: #dfe7df;
-  --primary: #2d5d46;
-  --primary-strong: #173d2e;
-  --primary-soft: #e1efe5;
-  --accent: #bf5a74;
-  --accent-soft: #f8e3ea;
-  --earth: #cbb08d;
-  --shadow: rgba(20, 33, 27, 0.08);
+  --panel-soft: #f1f5f9;
+  --panel-alt: #f8fafc;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --primary: #047857;
+  --primary-strong: #064e3b;
+  --primary-soft: #ecfdf5;
+  --accent: #e11d48;
+  --accent-soft: #ffe4e6;
+  --earth: #94a3b8;
+  --shadow: rgba(15, 23, 42, 0.04);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Segoe UI", "Inter", Arial, sans-serif;
-  --font-mono: "SFMono-Regular", "Consolas", monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 * {
@@ -36,8 +36,10 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: "Segoe UI", "Inter", Arial, sans-serif;
-  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 img {
@@ -50,54 +52,148 @@ p {
 }
 
 a {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease,
-    transform 0.2s ease, box-shadow 0.2s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 ::selection {
-  background: rgba(45, 93, 70, 0.18);
+  background: rgba(4, 120, 87, 0.16);
+  color: #064e3b;
+}
+
+/* Eliminate AI-generated clunky serif typography in favor of modern human UI typography */
+.font-serif {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  letter-spacing: -0.015em;
+}
+
+/* Glassmorphism navigation utility inspired by Gebyia Net */
+.glass {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .public-shell {
-  background: linear-gradient(180deg, #f9f7f4 0%, #f3f5f0 100%);
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
 }
 
 .surface-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--line);
-  box-shadow: 0 12px 32px rgba(16, 28, 23, 0.04);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.surface-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05);
 }
 
 .soft-badge {
   display: inline-flex;
   align-items: center;
   border-radius: 9999px;
-  border: 1px solid rgba(45, 93, 70, 0.12);
-  background: rgba(225, 239, 229, 0.9);
-  color: var(--primary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  border: 1px solid rgba(4, 120, 87, 0.18);
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.725rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0.45rem 0.8rem;
+  padding: 0.3rem 0.75rem;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--line);
-  box-shadow: 0 8px 26px rgba(20, 33, 27, 0.04);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
 }
 
 .kpi-label {
-  color: var(--muted);
+  color: #64748b;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .text-balance {
   text-wrap: balance;
+}
+
+/* Smooth out artificial oversized AI rounded corners across legacy utility classes */
+.rounded-\[20px\],
+.rounded-\[22px\],
+.rounded-\[24px\],
+.rounded-\[26px\],
+.rounded-\[30px\] {
+  border-radius: 0.875rem !important;
+}
+
+/* Normalize artificial murky background tones into crisp, natural shades */
+.bg-\[\#f5f2eb\],
+.bg-\[\#f4f1eb\],
+.bg-\[\#f3f5f1\],
+.bg-\[\#fdfcf9\],
+.bg-\[\#f8f7f4\],
+.bg-\[\#f8f7f5\] {
+  background-color: #f8fafc !important;
+}
+
+.bg-\[\#f2f5f0\],
+.bg-\[\#e9f0eb\],
+.bg-\[\#e4ede6\],
+.bg-\[\#f9faf8\] {
+  background-color: #f1f5f9 !important;
+}
+
+.border-\[\#dfe7df\],
+.border-\[\#d9e1d8\],
+.border-\[\#cfe4d7\] {
+  border-color: #e2e8f0 !important;
+}
+
+.text-\[\#1b2d24\],
+.text-\[\#1c2b23\],
+.text-\[\#172b20\] {
+  color: #0f172a !important;
+}
+
+.text-\[\#5d6e64\],
+.text-\[\#5d6d64\],
+.text-\[\#50635a\],
+.text-\[\#7a8a82\] {
+  color: #64748b !important;
+}
+
+/* Replace artificial muddy green fills with refined forest emerald tones */
+.bg-\[\#173d2e\],
+.bg-\[\#123d2f\],
+.bg-\[\#2c5a43\] {
+  background-color: #064e3b !important;
+}
+
+.text-\[\#173d2e\],
+.text-\[\#2c5a43\],
+.text-\[\#064b36\] {
+  color: #047857 !important;
+}
+
+.bg-\[\#e3efe7\],
+.bg-\[\#e7f4ed\],
+.bg-\[\#e1efe5\],
+.bg-\[\#eef3da\] {
+  background-color: #ecfdf5 !important;
+}
+
+/* Refined accent tone */
+.bg-\[\#c85b77\],
+.bg-\[\#c9577a\],
+.bg-\[\#bf5a74\] {
+  background-color: #047857 !important;
 }
 
 /* Individual Display Preferences: Typography Text Sizes */
@@ -115,19 +211,19 @@ html[data-text-size="large"] {
 
 /* Individual Display Preferences: Dark Theme */
 html[data-theme="dark"] {
-  --background: #0f1813;
-  --panel: #16241c;
-  --panel-soft: #1d2e24;
-  --panel-alt: #1a2a21;
-  --foreground: #ecf3ed;
-  --muted: #8fa395;
-  --line: #26382c;
-  --primary: #3b7457;
-  --primary-strong: #4f9671;
-  --primary-soft: #1a3326;
-  --accent: #d8708c;
+  --background: #090d0b;
+  --panel: #111814;
+  --panel-soft: #17211c;
+  --panel-alt: #131b17;
+  --foreground: #f1f5f3;
+  --muted: #94a39b;
+  --line: #22332a;
+  --primary: #10b981;
+  --primary-strong: #059669;
+  --primary-soft: #12281e;
+  --accent: #f43f5e;
   --accent-soft: #381d26;
-  --earth: #b39b7d;
+  --earth: #94a3b8;
   --shadow: rgba(0, 0, 0, 0.45);
   color-scheme: dark;
 }
@@ -147,14 +243,16 @@ html[data-theme="dark"] .bg-\[\#f8faf8\],
 html[data-theme="dark"] .bg-\[\#fbfcfb\],
 html[data-theme="dark"] .bg-\[\#f2f5f0\],
 html[data-theme="dark"] .bg-\[\#f3f5f1\],
-html[data-theme="dark"] .bg-gray-50 {
+html[data-theme="dark"] .bg-gray-50,
+html[data-theme="dark"] .bg-slate-50 {
   background-color: var(--panel-soft) !important;
   color: var(--foreground);
 }
 
 html[data-theme="dark"] .text-\[\#1c2b23\],
 html[data-theme="dark"] .text-\[\#1b2d24\],
-html[data-theme="dark"] .text-gray-900 {
+html[data-theme="dark"] .text-gray-900,
+html[data-theme="dark"] .text-slate-900 {
   color: var(--foreground) !important;
 }
 
@@ -162,13 +260,15 @@ html[data-theme="dark"] .text-\[\#5d6e64\],
 html[data-theme="dark"] .text-\[\#5d6d64\],
 html[data-theme="dark"] .text-\[\#7a8a82\],
 html[data-theme="dark"] .text-gray-500,
-html[data-theme="dark"] .text-gray-600 {
+html[data-theme="dark"] .text-gray-600,
+html[data-theme="dark"] .text-slate-500 {
   color: var(--muted) !important;
 }
 
 html[data-theme="dark"] .border-\[\#dfe7df\],
 html[data-theme="dark"] .border-\[\#d9e1d8\],
-html[data-theme="dark"] .border-gray-200 {
+html[data-theme="dark"] .border-gray-200,
+html[data-theme="dark"] .border-slate-200 {
   border-color: var(--line) !important;
 }
 
@@ -183,7 +283,6 @@ html[data-theme="dark"] textarea {
 html[data-theme="dark"] input:disabled,
 html[data-theme="dark"] select:disabled,
 html[data-theme="dark"] textarea:disabled {
-  background-color: #121c16 !important;
-  color: #6a7c71 !important;
+  background-color: #0e1411 !important;
+  color: #5c6e64 !important;
 }
-
