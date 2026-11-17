@@ -94,10 +94,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const role = normalizeRole(session?.user?.role as string | undefined);
   let navigation: NavItem[] = [];
-  if (role === 'SUPER_ADMIN') navigation = adminNavigation;
-  if (role === 'FIELD_OFFICER') navigation = fieldNavigation;
+  if (role === 'SUPER_ADMIN' || role === 'PROJECT_MANAGER') navigation = adminNavigation;
+  if (role === 'FIELD_OFFICER' || role === 'TRAINER') navigation = fieldNavigation;
   if (role === 'VETERINARIAN') navigation = vetNavigation;
   if (role === 'FINANCE_OFFICER') navigation = financeNavigation;
+  if (role === 'FUNDER') {
+    navigation = [
+      { name: 'Dashboard', href: '/dashboard/admin/reports', icon: LayoutDashboard },
+      { name: 'Project Reports', href: '/dashboard/admin/reports', icon: FileText },
+      { name: 'Historical Records', href: '/dashboard/history', icon: History },
+      { name: 'Personal Settings', href: '/dashboard/settings', icon: UserCog },
+    ];
+  }
 
   const renderNav = (items: NavItem[], isMobile = false) => {
     return items.map((item) => {

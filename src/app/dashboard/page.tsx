@@ -20,13 +20,17 @@ export default async function DashboardRedirect() {
 
   switch (role) {
     case "SUPER_ADMIN":
+    case "PROJECT_MANAGER":
       redirect("/dashboard/admin");
     case "FIELD_OFFICER":
+    case "TRAINER":
       redirect("/dashboard/field");
     case "VETERINARIAN":
       redirect("/dashboard/vet");
     case "FINANCE_OFFICER":
       redirect("/dashboard/finance");
+    case "FUNDER":
+      redirect("/dashboard/admin/reports");
     default:
       redirect("/login");
   }

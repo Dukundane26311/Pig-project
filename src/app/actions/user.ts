@@ -8,10 +8,13 @@ import { Prisma, Role } from "@prisma/client";
 import { getActiveUser } from "@/lib/active-user";
 
 const assignableRoles = [
-  "SUPER_ADMIN",
-  "FIELD_OFFICER",
-  "VETERINARIAN",
-  "FINANCE_OFFICER",
+  Role.SUPER_ADMIN,
+  Role.PROJECT_MANAGER,
+  Role.FIELD_OFFICER,
+  Role.VETERINARIAN,
+  Role.FINANCE_OFFICER,
+  Role.TRAINER,
+  Role.FUNDER,
 ] as const;
 
 type AssignableRole = (typeof assignableRoles)[number];

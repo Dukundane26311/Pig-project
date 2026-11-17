@@ -94,10 +94,13 @@ export default async function NewUserPage({
                 className="w-full rounded-md border-[#d9e1d8] shadow-sm focus:border-[#2c5a43] focus:ring-[#2c5a43] sm:text-sm p-2 border bg-white"
               >
                 <option value="">Select a role...</option>
-                <option value="FIELD_OFFICER">Employee / Field Officer (Data Entry & Distributions)</option>
+                <option value="SUPER_ADMIN">Super Administrator (Full System Access)</option>
+                <option value="PROJECT_MANAGER">Project Manager (Operations & Monitoring)</option>
+                <option value="FIELD_OFFICER">Field Officer / Employee (Distributions & Beneficiaries)</option>
                 <option value="VETERINARIAN">Veterinarian (Health Records)</option>
                 <option value="FINANCE_OFFICER">Finance Officer (Income & Expenses)</option>
-                <option value="SUPER_ADMIN">Admin (Full Access)</option>
+                <option value="TRAINER">Trainer (Beneficiary Education)</option>
+                <option value="FUNDER">Funder (Project Monitoring & Reports)</option>
               </select>
             </div>
           </div>

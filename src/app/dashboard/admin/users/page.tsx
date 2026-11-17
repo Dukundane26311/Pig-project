@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, ShieldCheck, UserCircle2, History } from "lucide-react";
+import { Plus, ShieldCheck, UserCircle2, History, BarChart3 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { DeleteUserButton } from "./DeleteUserButton";
 
@@ -30,19 +30,28 @@ export default async function UsersManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-serif text-[#1c2b23]">Users</h1>
           <p className="mt-1 text-sm text-[#5d6e64]">Manage system users and roles.</p>
         </div>
 
-        <Link
-          href="/dashboard/admin/users/new"
-          className="inline-flex items-center gap-2 rounded-md bg-[#2c5a43] px-4 py-2 text-sm font-medium text-white hover:bg-[#1c2b23]"
-        >
-          <Plus className="h-4 w-4" />
-          Add User
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/dashboard/admin/users/analytics"
+            className="inline-flex items-center gap-2 rounded-lg border border-[#d9e1d8] bg-white px-3.5 py-2 text-xs font-semibold text-[#1c2b23] shadow-xs hover:bg-[#f2f5f0] transition"
+          >
+            <BarChart3 className="h-4 w-4 text-[#2c5a43]" />
+            <span>Role Analytics</span>
+          </Link>
+          <Link
+            href="/dashboard/admin/users/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#2c5a43] px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1c2b23] transition"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add User</span>
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[#d9e1d8] bg-white shadow-sm">

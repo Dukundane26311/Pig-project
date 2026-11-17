@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import * as rg from "rwanda-geo";
 
 const prisma = new PrismaClient();
@@ -110,6 +110,37 @@ async function main() {
       where: { key: s.key },
       create: s,
       update: { description: s.description },
+    });
+  }
+
+  console.log("Seeding default staff user accounts for all 7 roles...");
+  const bcrypt = await import("bcryptjs");
+  const defaultUsers = [
+    { name: "Super Administrator", email: "admin@pigproject.rw", role: Role.SUPER_ADMIN, password: "Admin2026!" },
+    { name: "Project Manager", email: "manager@pigproject.rw", role: Role.PROJECT_MANAGER, password: "Manager2026!" },
+    { name: "Field Officer", email: "field@pigproject.rw", role: Role.FIELD_OFFICER, password: "Field2026!" },
+    { name: "Veterinarian Doctor", email: "vet@pigproject.rw", role: Role.VETERINARIAN, password: "Vet2026!" },
+    { name: "Finance Officer", email: "finance@pigproject.rw", role: Role.FINANCE_OFFICER, password: "Finance2026!" },
+    { name: "Project Trainer", email: "trainer@pigproject.rw", role: Role.TRAINER, password: "Trainer2026!" },
+    { name: "Project Funder", email: "funder@pigproject.rw", role: Role.FUNDER, password: "Funder2026!" },
+  ];
+
+  for (const u of defaultUsers) {
+    const hashedPassword = await bcrypt.hash(u.password, 10);
+    await prisma.user.upsert({
+      where: { email: u.email },
+      create: {
+        name: u.name,
+        email: u.email,
+        password: hashedPassword,
+        role: u.role,
+        isActive: true,
+      },
+      update: {
+        name: u.name,
+        role: u.role,
+        isActive: true,
+      },
     });
   }
 
